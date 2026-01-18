@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Icon Generator</title>
+</head>
+<body>
+    <h1>PWA Icon Generator</h1>
+    <p>This is a placeholder. For production, replace the icon files in the public folder with proper 192x192 and 512x512 PNG images.</p>
+    <p>You can use any image editor or online tool to create icons with a checkmark or habit tracker theme.</p>
+    <canvas id="icon192" width="192" height="192" style="border: 1px solid #ccc; margin: 10px;"></canvas>
+    <canvas id="icon512" width="512" height="512" style="border: 1px solid #ccc; margin: 10px;"></canvas>
+    <script>
+        function drawIcon(canvas, size) {
+            const ctx = canvas.getContext('2d');
+            // Background gradient
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#6366f1');
+            gradient.addColorStop(1, '#4f46e5');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+            
+            // Draw checkmark
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = size / 15;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.beginPath();
+            ctx.moveTo(size * 0.3, size * 0.5);
+            ctx.lineTo(size * 0.45, size * 0.65);
+            ctx.lineTo(size * 0.7, size * 0.35);
+            ctx.stroke();
+        }
+        
+        drawIcon(document.getElementById('icon192'), 192);
+        drawIcon(document.getElementById('icon512'), 512);
+    </script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Dark theme baseline matching spec (#0b0b0b to #141414) */
+@layer base {
+  :root {
+    --color-bg: #0b0b0b;
+    --color-surface: #141414;
+    --color-elevated: #1c1c1c;
+    --color-border: #2a2a2a;
+    --color-text: #f5f5f5;
+    --color-text-secondary: #a1a1aa;
+    --color-accent: #6366f1;
+    --color-success: #22c55e;
+  }
+
+  html {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+  }
+
+  body {
+    @apply bg-dark-bg text-gray-100 antialiased;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    min-height: 100dvh; /* Dynamic viewport height for mobile */
+  }
+
+  /* Safe area insets for iOS PWA */
+  #root {
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+/* Custom utility classes */
+@layer components {
+  .bottom-nav {
+    @apply fixed bottom-0 left-0 right-0 bg-dark-surface border-t border-dark-border;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .bottom-nav-item {
+    @apply flex flex-col items-center justify-center py-2 px-4 text-gray-400 transition-colors duration-200;
+    min-height: 44px; /* Accessibility: minimum tap target */
+  }
+
+  .bottom-nav-item.active {
+    @apply text-accent-primary;
+  }
+
+  .bottom-nav-item:hover {
+    @apply text-gray-200;
+  }
+
+  .page-container {
+    @apply pb-16; /* Account for bottom nav */
+    min-height: calc(100vh - 64px);
+    min-height: calc(100dvh - 64px);
+  }
+
+  /* Full-height grid container */
+  .page-container-grid {
+    height: calc(100vh - 64px);
+    height: calc(100dvh - 64px);
+  }
+
+  .card {
+    @apply bg-dark-surface border border-dark-border rounded-xl p-4;
+  }
+}
