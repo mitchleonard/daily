@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#0b0b0b" />
+    <meta name="background-color" content="#0b0b0b" />
+    
+    <!-- iOS PWA Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Daily" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    
+    <!-- Prevent flash of white on dark theme -->
+    <style>
+      html, body {
+        background-color: #0b0b0b;
+        color: #f5f5f5;
+      }
+    </style>
+    
+    <!-- GitHub Pages SPA redirect handler -->
+    <!-- Works with 404.html to restore correct routes on page refresh -->
+    <script type="text/javascript">
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) { 
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
+    
+    <title>Daily</title>
+    <script type="module" crossorigin src="/assets/index-P_ngNxd4.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/vendor-Bi8yWnOT.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-DDNy1Esi.css">
+  <link rel="manifest" href="/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
