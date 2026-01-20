@@ -351,7 +351,7 @@ export function VirtualizedGrid({
         <div
           className="relative"
           style={{
-            height: totalHeight,
+            height: totalHeight + 40, // Extra padding for legend clearance
             transform: `translateY(-${scrollTop}px)`,
           }}
         >
@@ -377,9 +377,9 @@ export function VirtualizedGrid({
           className="relative"
           style={{
             width: totalWidth,
-            height: totalHeight,
+            height: totalHeight + 40, // Extra padding for legend clearance
             minWidth: totalWidth,
-            minHeight: totalHeight,
+            minHeight: totalHeight + 40,
           }}
         >
           {/* Today column highlight */}
@@ -405,8 +405,11 @@ export function VirtualizedGrid({
         Today
       </button>
 
-      {/* Legend hint */}
-      <div className="absolute bottom-4 left-4 z-40 text-[10px] text-gray-500 select-none">
+      {/* Legend hint - positioned after left column */}
+      <div 
+        className="absolute bottom-4 z-40 text-[10px] text-gray-500 select-none"
+        style={{ left: LEFT_COLUMN_WIDTH + 8 }}
+      >
         Tap = ✓ · Double-tap = —
       </div>
 
