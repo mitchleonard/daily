@@ -44,12 +44,22 @@ export const EMOJI_SUGGESTIONS = [
   '💤', '🌅', '🧠', '💪', '🏃', '🚴', '🧘‍♀️', '📝', '🎯', '✅',
 ];
 
+import type { Schedule } from '../../db/types';
+import { isFrequencySchedule } from '../../db/types';
+
 /**
- * Format schedule days for display
+ * Format schedule for display
  */
-export function formatSchedule(scheduleDays: number[] | 'everyday'): string {
+export function formatSchedule(scheduleDays: Schedule): string {
   if (scheduleDays === 'everyday') return 'Daily';
   
+  // Handle frequency-based schedule
+  if (isFrequencySchedule(scheduleDays)) {
+    const times = scheduleDays.timesPerWeek;
+    return `${times}× per week`;
+  }
+  
+  // Handle specific days array
   if (scheduleDays.length === 0) return 'No days';
   if (scheduleDays.length === 7) return 'Daily';
   

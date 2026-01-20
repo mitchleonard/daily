@@ -1,7 +1,8 @@
 import { db, generateId, now } from './database';
 import { habitsRepository } from './habitsRepository';
 import { logsRepository } from './logsRepository';
-import type { Habit, LogEntry } from './types';
+import type { Habit, LogEntry, Schedule } from './types';
+import { isFrequencySchedule } from './types';
 
 /**
  * Sample habits for seeding the database
@@ -93,8 +94,9 @@ const SAMPLE_HABITS: Array<Omit<Habit, 'id' | 'createdAt' | 'updatedAt' | 'sortO
 /**
  * Check if a date matches the habit's schedule
  */
-function isScheduledDay(date: Date, scheduleDays: number[] | 'everyday'): boolean {
+function isScheduledDay(date: Date, scheduleDays: Schedule): boolean {
   if (scheduleDays === 'everyday') return true;
+  if (isFrequencySchedule(scheduleDays)) return true;
   return scheduleDays.includes(date.getDay());
 }
 

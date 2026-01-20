@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import type { Habit, NewHabit } from '../../db/types';
+import type { Habit, NewHabit, Schedule } from '../../db/types';
+import { isFrequencySchedule } from '../../db/types';
 import { ColorPicker } from './ColorPicker';
 import { WeekdayPicker } from './WeekdayPicker';
 import { EmojiPicker } from './EmojiPicker';
@@ -21,7 +22,7 @@ export function HabitFormModal({ habit, onSave, onClose }: HabitFormModalProps) 
   const [name, setName] = useState(habit?.name || '');
   const [icon, setIcon] = useState(habit?.icon || '');
   const [color, setColor] = useState(habit?.color || HABIT_COLORS[0].hex);
-  const [scheduleDays, setScheduleDays] = useState<number[] | 'everyday'>(
+  const [scheduleDays, setScheduleDays] = useState<Schedule>(
     habit?.scheduleDays || 'everyday'
   );
   const [startDate, setStartDate] = useState(habit?.startDate || DEFAULT_START_DATE);
@@ -43,8 +44,12 @@ export function HabitFormModal({ habit, onSave, onClose }: HabitFormModalProps) 
     if (!name.trim()) return 'Name is required';
     if (!icon) return 'Icon is required';
     if (!color) return 'Color is required';
-    if (scheduleDays !== 'everyday' && scheduleDays.length === 0) {
-      return 'Select at least one day or choose "Every Day"';
+    // Check schedule is valid
+    if (Array.isArray(scheduleDays) && scheduleDays.length === 0) {
+      return 'Select at least one day';
+    }
+    if (isFrequencySchedule(scheduleDays) && (scheduleDays.timesPerWeek < 1 || scheduleDays.timesPerWeek > 7)) {
+      return 'Frequency must be between 1 and 7 times per week';
     }
     return null;
   };

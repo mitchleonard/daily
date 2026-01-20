@@ -3,6 +3,26 @@
  */
 
 /**
+ * Schedule type for habits
+ * - 'everyday': Every day of the week
+ * - number[]: Specific days (0-6 for Sun-Sat)
+ * - { type: 'frequency', timesPerWeek: number }: X times per week (user chooses when)
+ */
+export type Schedule = 
+  | 'everyday'
+  | number[]
+  | { type: 'frequency'; timesPerWeek: number };
+
+/**
+ * Type guard to check if schedule is frequency-based
+ */
+export function isFrequencySchedule(
+  schedule: Schedule
+): schedule is { type: 'frequency'; timesPerWeek: number } {
+  return typeof schedule === 'object' && schedule !== null && 'type' in schedule && schedule.type === 'frequency';
+}
+
+/**
  * Habit entity
  * Represents a trackable habit with schedule and display properties
  */
@@ -11,7 +31,7 @@ export interface Habit {
   name: string;
   icon: string; // Emoji
   color: string; // Hex color (e.g., "#22c55e")
-  scheduleDays: number[] | 'everyday'; // 0-6 for Sun-Sat, or 'everyday'
+  scheduleDays: Schedule; // Schedule configuration
   startDate: string; // YYYY-MM-DD
   createdAt: string; // ISO timestamp
   updatedAt: string; // ISO timestamp

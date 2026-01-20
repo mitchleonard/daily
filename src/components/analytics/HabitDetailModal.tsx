@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react';
 import type { Habit } from '../../db/types';
 import type { HabitStats, LogsMap } from '../../lib/analytics';
 import { getDaysAgo, getToday, generateDateRange, isScheduledDay } from '../../lib/analytics';
+import { formatSchedule } from '../habits/constants';
 
 interface HabitDetailModalProps {
   habit: Habit;
@@ -53,11 +54,7 @@ export function HabitDetailModal({ habit, stats, logsMap, onClose }: HabitDetail
   }, [habit.id, logsMap, today]);
 
   // Format schedule
-  const scheduleText = habit.scheduleDays === 'everyday' 
-    ? 'Every day'
-    : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-        .filter((_, i) => (habit.scheduleDays as number[]).includes(i))
-        .join(', ');
+  const scheduleText = formatSchedule(habit.scheduleDays);
 
   return (
     <div 

@@ -1,4 +1,6 @@
 import { GRID_START_DATE, DAYS_AHEAD } from './constants';
+import type { Schedule } from '../../db/types';
+import { isFrequencySchedule } from '../../db/types';
 
 /**
  * Generate an array of date strings from startDate to endDate
@@ -74,12 +76,15 @@ export function getDayOfWeek(dateStr: string): number {
 
 /**
  * Check if a date is scheduled for a habit
+ * For frequency-based schedules, all days are considered "scheduled" 
+ * (user chooses when to complete)
  */
 export function isScheduledDay(
   dateStr: string, 
-  scheduleDays: number[] | 'everyday'
+  scheduleDays: Schedule
 ): boolean {
   if (scheduleDays === 'everyday') return true;
+  if (isFrequencySchedule(scheduleDays)) return true; // All days are valid for frequency habits
   const dayOfWeek = getDayOfWeek(dateStr);
   return scheduleDays.includes(dayOfWeek);
 }

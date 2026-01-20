@@ -46,8 +46,12 @@ function validateHabit(habit: unknown, index: number): string[] {
   }
   if (!h.scheduleDays) {
     errors.push(`Habit ${index}: missing 'scheduleDays'`);
-  } else if (h.scheduleDays !== 'everyday' && !Array.isArray(h.scheduleDays)) {
-    errors.push(`Habit ${index}: 'scheduleDays' must be 'everyday' or an array`);
+  } else if (
+    h.scheduleDays !== 'everyday' && 
+    !Array.isArray(h.scheduleDays) &&
+    !(typeof h.scheduleDays === 'object' && (h.scheduleDays as { type?: string }).type === 'frequency')
+  ) {
+    errors.push(`Habit ${index}: 'scheduleDays' must be 'everyday', an array of days, or a frequency object`);
   }
   
   return errors;

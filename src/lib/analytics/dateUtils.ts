@@ -2,6 +2,9 @@
  * Date utilities for analytics computations
  */
 
+import type { Schedule } from '../../db/types';
+import { isFrequencySchedule } from '../../db/types';
+
 /**
  * Format a Date to YYYY-MM-DD string
  */
@@ -54,12 +57,14 @@ export function getDayOfWeek(dateStr: string): number {
 
 /**
  * Check if a date matches the schedule
+ * For frequency-based schedules, all days count as "scheduled"
  */
 export function isScheduledDay(
   dateStr: string,
-  scheduleDays: number[] | 'everyday'
+  scheduleDays: Schedule
 ): boolean {
   if (scheduleDays === 'everyday') return true;
+  if (isFrequencySchedule(scheduleDays)) return true;
   return scheduleDays.includes(getDayOfWeek(dateStr));
 }
 
@@ -69,7 +74,7 @@ export function isScheduledDay(
 export function getScheduledDatesInRange(
   startDate: string,
   endDate: string,
-  scheduleDays: number[] | 'everyday',
+  scheduleDays: Schedule,
   habitStartDate: string
 ): string[] {
   const allDates = generateDateRange(startDate, endDate);
