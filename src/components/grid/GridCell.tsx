@@ -78,7 +78,7 @@ export const GridCell = memo(function GridCell({
       className={`
         absolute flex items-center justify-center
         border-r border-b border-dark-border/50
-        select-none touch-none
+        select-none touch-manipulation
         ${isToday ? 'bg-accent-primary/10' : ''}
       `}
       onPointerDown={handlePointerDown}
