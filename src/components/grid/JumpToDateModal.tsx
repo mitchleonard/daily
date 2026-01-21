@@ -64,7 +64,8 @@ export function JumpToDateModal({ onJump, onClose }: JumpToDateModalProps) {
       {/* Modal */}
       <div 
         className="relative w-full max-w-sm bg-dark-surface border-t sm:border 
-                   border-dark-border sm:rounded-2xl rounded-t-2xl p-5"
+                   border-dark-border sm:rounded-2xl rounded-t-2xl p-5
+                   touch-auto overscroll-contain overflow-visible"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -83,7 +84,7 @@ export function JumpToDateModal({ onJump, onClose }: JumpToDateModalProps) {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
+          <div className="relative">
             <label className="block text-sm text-gray-400 mb-2">
               Select a date
             </label>
@@ -95,7 +96,8 @@ export function JumpToDateModal({ onJump, onClose }: JumpToDateModalProps) {
               max={maxDate}
               className="w-full px-4 py-3 bg-dark-elevated border border-dark-border rounded-lg
                          text-white focus:border-accent-primary focus:outline-none
-                         [color-scheme:dark]"
+                         [color-scheme:dark] appearance-none"
+              style={{ WebkitAppearance: 'none' }}
               autoFocus
             />
           </div>

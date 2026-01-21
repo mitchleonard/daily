@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import type { Habit, NewHabit, Schedule } from '../../db/types';
-import { isFrequencySchedule } from '../../db/types';
 import { ColorPicker } from './ColorPicker';
 import { WeekdayPicker } from './WeekdayPicker';
 import { EmojiPicker } from './EmojiPicker';
@@ -44,13 +43,7 @@ export function HabitFormModal({ habit, onSave, onClose }: HabitFormModalProps) 
     if (!name.trim()) return 'Name is required';
     if (!icon) return 'Icon is required';
     if (!color) return 'Color is required';
-    // Check schedule is valid
-    if (Array.isArray(scheduleDays) && scheduleDays.length === 0) {
-      return 'Select at least one day';
-    }
-    if (isFrequencySchedule(scheduleDays) && (scheduleDays.timesPerWeek < 1 || scheduleDays.timesPerWeek > 7)) {
-      return 'Frequency must be between 1 and 7 times per week';
-    }
+    // Schedule is optional - no validation needed
     return null;
   };
 
@@ -97,9 +90,10 @@ export function HabitFormModal({ habit, onSave, onClose }: HabitFormModalProps) 
       
       {/* Modal */}
       <div 
-        className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto
+        className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto overflow-x-hidden
                    bg-dark-surface border-t sm:border border-dark-border 
-                   sm:rounded-2xl rounded-t-2xl p-5 pb-safe"
+                   sm:rounded-2xl rounded-t-2xl p-5 pb-safe
+                   touch-auto overscroll-contain"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -155,13 +149,13 @@ export function HabitFormModal({ habit, onSave, onClose }: HabitFormModalProps) 
           {/* Schedule */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
-              Schedule *
+              Schedule
             </label>
             <WeekdayPicker value={scheduleDays} onChange={setScheduleDays} />
           </div>
 
           {/* Start Date */}
-          <div>
+          <div className="relative">
             <label className="block text-sm font-medium text-gray-300 mb-2">
               Start Date
             </label>
@@ -173,7 +167,8 @@ export function HabitFormModal({ habit, onSave, onClose }: HabitFormModalProps) 
               max={today}
               className="w-full px-4 py-3 bg-dark-elevated border border-dark-border rounded-lg
                          text-white focus:border-accent-primary focus:outline-none
-                         [color-scheme:dark]"
+                         [color-scheme:dark] appearance-none"
+              style={{ WebkitAppearance: 'none' }}
             />
             <p className="text-xs text-gray-500 mt-1">
               Habits are tracked from this date onwards

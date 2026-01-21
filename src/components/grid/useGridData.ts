@@ -92,6 +92,43 @@ export function useGridData() {
   }, [loadHabits, loadLogsForRange]);
 
   /**
+   * Refresh when page becomes visible or focused (e.g., after adding habits)
+   */
+  useEffect(() => {
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'visible') {
+        // Reload habits to catch any new ones added
+        const result = await loadHabits();
+        if (result) {
+          const { habits: h, dates: d } = result;
+          if (d.length > 0) {
+            await loadLogsForRange(h, d[0], d[d.length - 1]);
+          }
+        }
+      }
+    };
+
+    const handleFocus = async () => {
+      // Reload habits when window regains focus
+      const result = await loadHabits();
+      if (result) {
+        const { habits: h, dates: d } = result;
+        if (d.length > 0) {
+          await loadLogsForRange(h, d[0], d[d.length - 1]);
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [loadHabits, loadLogsForRange]);
+
+  /**
    * Get log for a specific habit and date
    */
   const getLog = useCallback((habitId: string, date: string): LogEntry | undefined => {
