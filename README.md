@@ -343,3 +343,4 @@ Navigate to `/settings` to backup and restore your data.
 ## License
 
 MIT
+
