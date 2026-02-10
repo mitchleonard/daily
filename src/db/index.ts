@@ -2,6 +2,7 @@
 export { db, generateId, now, today } from './database';
 export { habitsRepository } from './habitsRepository';
 export { logsRepository } from './logsRepository';
+export { cloudHabitsRepository, cloudLogsRepository } from './cloudRepository';
 export { seedDatabase, clearDatabase, getDatabaseStats, isDatabaseEmpty } from './seedData';
 
 // Type exports

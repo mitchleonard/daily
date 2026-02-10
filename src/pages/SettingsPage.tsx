@@ -8,6 +8,7 @@ import {
   resetAllData,
   readFileAsText,
 } from '../lib/dataPortability';
+import { useAuth } from '../lib/auth';
 
 // Only show debug panel in development mode
 const isDev = import.meta.env.DEV;
@@ -194,6 +195,7 @@ function ImportConfirmModal({
 export function SettingsPage() {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { user, isConfigured, signOut } = useAuth();
   
   const [stats, setStats] = useState<DbStats | null>(null);
   const [loading, setLoading] = useState(false);
@@ -403,6 +405,37 @@ export function SettingsPage() {
           }`}
         >
           {message.text}
+        </div>
+      )}
+
+      {/* Account Section - Only shown when AWS is configured */}
+      {isConfigured && user && (
+        <div className="card">
+          <h2 className="text-sm font-medium text-gray-300 mb-3">👤 Account</h2>
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-white font-medium">{user.email}</div>
+              <div className="text-xs text-gray-500">Synced to cloud</div>
+            </div>
+            <button
+              onClick={() => signOut()}
+              className="px-4 py-2 bg-dark-elevated border border-dark-border
+                         text-gray-300 text-sm font-medium rounded-lg 
+                         hover:bg-dark-border transition-colors"
+            >
+              Sign Out
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Local Mode Notice - Only shown when not using cloud */}
+      {!isConfigured && (
+        <div className="card bg-amber-500/5 border-amber-500/20">
+          <h2 className="text-sm font-medium text-amber-400 mb-2">📱 Local Mode</h2>
+          <p className="text-gray-400 text-xs">
+            Your data is stored locally on this device. Export regularly to keep a backup.
+          </p>
         </div>
       )}
 

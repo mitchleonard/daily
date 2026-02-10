@@ -15,7 +15,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { habitsRepository } from '../db';
+import { cloudHabitsRepository as habitsRepository } from '../db';
 import type { Habit, NewHabit } from '../db/types';
 import { HabitFormModal, HabitRow, SortableHabitRow } from '../components/habits';
 

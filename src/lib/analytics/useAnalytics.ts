@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { habitsRepository, logsRepository } from '../../db';
+import { cloudHabitsRepository as habitsRepository, cloudLogsRepository as logsRepository } from '../../db';
 import type { Habit } from '../../db/types';
 import type { HabitStats, OverviewStats, HabitConnection, LogsMap } from './types';
 import {
