@@ -1,7 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { GridPage, HabitsPage, AnalyticsPage, SettingsPage, AuthPage } from './pages';
-import { AuthProvider, useAuth, isAwsConfigured } from './lib/auth';
+import { AuthProvider, useAuth } from './lib/auth';
 
 /**
  * Protected route wrapper - shows auth page if not logged in

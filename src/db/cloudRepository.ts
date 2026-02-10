@@ -138,7 +138,14 @@ export const cloudLogsRepository = {
   async getByDateRange(startDate: string, endDate: string): Promise<LogEntry[]> {
     if (await useCloud()) {
       const logs = await api.getLogs(startDate, endDate);
-      return logs.map(({ userId, 'habitId#date': _, ...log }) => log as unknown as LogEntry);
+      return logs.map((log) => ({
+        id: log.id,
+        habitId: log.habitId,
+        date: log.date,
+        status: log.status,
+        createdAt: log.createdAt,
+        updatedAt: log.updatedAt,
+      })) as LogEntry[];
     }
     return localLogs.getByDateRange(startDate, endDate);
   },
@@ -149,7 +156,14 @@ export const cloudLogsRepository = {
       const logs = await api.getLogs();
       return logs
         .filter((l) => l.habitId === habitId)
-        .map(({ userId, ...log }) => log as unknown as LogEntry);
+        .map((log) => ({
+          id: log.id,
+          habitId: log.habitId,
+          date: log.date,
+          status: log.status,
+          createdAt: log.createdAt,
+          updatedAt: log.updatedAt,
+        })) as LogEntry[];
     }
     return localLogs.getByHabit(habitId);
   },
