@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
-import { habitsRepository, logsRepository } from '../db';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { cloudHabitsRepository as habitsRepository, cloudLogsRepository as logsRepository } from '../db';
 import type { Habit } from '../db/types';
+import { useAuth } from '../lib/auth';
 import type { HabitStats, OverviewStats, HabitConnection, LogsMap } from '../lib/analytics';
 import {
   createLogsMap,
@@ -23,6 +24,9 @@ type SortOption = 'default' | 'streak' | 'rate30' | 'slipping';
  * Analytics Page - View habit statistics and trends
  */
 export function AnalyticsPage() {
+  const { user } = useAuth();
+  const retriedEmptyRef = useRef(false);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [habits, setHabits] = useState<Habit[]>([]);
@@ -97,6 +101,14 @@ export function AnalyticsPage() {
     loadAnalytics();
   }, [loadAnalytics]);
 
+  // When signed in but habits are empty, retry once after a short delay (handles token/API timing)
+  useEffect(() => {
+    if (!user || habits.length > 0 || loading || retriedEmptyRef.current) return;
+    retriedEmptyRef.current = true;
+    const t = setTimeout(() => loadAnalytics(), 800);
+    return () => clearTimeout(t);
+  }, [user, habits.length, loading, loadAnalytics]);
+
   // Sort habits
   const sortedHabits = [...habits].sort((a, b) => {
     const statsA = habitStats.get(a.id);
@@ -148,15 +160,32 @@ export function AnalyticsPage() {
           <span className="text-4xl mb-4 block">📊</span>
           <h2 className="text-xl font-semibold mb-2">No Data Yet</h2>
           <p className="text-gray-400 mb-4">
-            Add some habits and log your progress to see analytics.
+            {user
+              ? "Add some habits and log your progress to see analytics. If you've already added habits, try refreshing."
+              : 'Add some habits and log your progress to see analytics.'}
           </p>
-          <a
-            href="/habits"
-            className="inline-block px-4 py-2 bg-accent-primary hover:bg-accent-primary/80
-                       text-white font-medium rounded-lg transition-colors"
-          >
-            Add Habits
-          </a>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            {user && (
+              <button
+                type="button"
+                onClick={() => {
+                  retriedEmptyRef.current = false;
+                  loadAnalytics();
+                }}
+                className="px-4 py-2 bg-dark-elevated border border-dark-border rounded-lg
+                         text-gray-300 hover:text-white hover:border-accent-primary transition-colors"
+              >
+                🔄 Refresh
+              </button>
+            )}
+            <a
+              href="/habits"
+              className="inline-block px-4 py-2 bg-accent-primary hover:bg-accent-primary/80
+                         text-white font-medium rounded-lg transition-colors"
+            >
+              Add Habits
+            </a>
+          </div>
         </div>
       </div>
     );
