@@ -10,6 +10,7 @@ interface HabitRowProps {
   onEdit: (habit: Habit) => void;
   onArchive: (id: string) => void;
   onUnarchive: (id: string) => void;
+  onDelete: (habit: Habit) => void;
 }
 
 /**
@@ -23,6 +24,7 @@ export function HabitRow({
   onEdit,
   onArchive,
   onUnarchive,
+  onDelete,
 }: HabitRowProps) {
   const [showMenu, setShowMenu] = useState(false);
 
@@ -149,12 +151,23 @@ export function HabitRow({
                     onArchive(habit.id);
                     setShowMenu(false);
                   }}
-                  className="w-full px-4 py-2.5 text-left text-sm text-accent-error
-                             hover:bg-accent-error/10 transition-colors"
+                  className="w-full px-4 py-2.5 text-left text-sm text-gray-300
+                             hover:bg-dark-border hover:text-white transition-colors"
                 >
                   📦 Archive
                 </button>
               )}
+              <button
+                type="button"
+                onClick={() => {
+                  onDelete(habit);
+                  setShowMenu(false);
+                }}
+                className="w-full px-4 py-2.5 text-left text-sm text-accent-error
+                           hover:bg-accent-error/10 transition-colors"
+              >
+                🗑️ Delete
+              </button>
             </div>
           </>
         )}

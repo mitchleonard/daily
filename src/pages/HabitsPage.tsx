@@ -34,6 +34,7 @@ export function HabitsPage() {
   // Modal state
   const [showModal, setShowModal] = useState(false);
   const [editingHabit, setEditingHabit] = useState<Habit | undefined>(undefined);
+  const [habitToDelete, setHabitToDelete] = useState<Habit | null>(null);
 
   // Configure sensors for drag-and-drop
   // PointerSensor for mouse, TouchSensor for mobile with activation delay
@@ -142,6 +143,20 @@ export function HabitsPage() {
     } catch (err) {
       console.error('Failed to archive habit:', err);
       setError('Failed to archive habit.');
+    }
+  };
+
+  /**
+   * Permanently delete a habit and all its logs
+   */
+  const handleDelete = async (id: string) => {
+    try {
+      await habitsRepository.delete(id);
+      setHabitToDelete(null);
+      await loadHabits();
+    } catch (err) {
+      console.error('Failed to delete habit:', err);
+      setError('Failed to delete habit.');
     }
   };
 
@@ -259,6 +274,7 @@ export function HabitsPage() {
                     onEdit={openEditModal}
                     onArchive={handleArchive}
                     onUnarchive={handleUnarchive}
+                    onDelete={(h) => setHabitToDelete(h)}
                   />
                 ))}
               </div>
@@ -295,6 +311,7 @@ export function HabitsPage() {
                   onEdit={openEditModal}
                   onArchive={handleArchive}
                   onUnarchive={handleUnarchive}
+                  onDelete={(h) => setHabitToDelete(h)}
                 />
               ))}
             </div>
@@ -309,6 +326,42 @@ export function HabitsPage() {
           onSave={editingHabit ? handleUpdate : handleCreate}
           onClose={closeModal}
         />
+      )}
+
+      {/* Delete confirmation modal */}
+      {habitToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            onClick={() => setHabitToDelete(null)}
+          />
+          <div className="relative w-full max-w-md bg-dark-surface border border-dark-border rounded-2xl p-6">
+            <div className="text-center mb-6">
+              <span className="text-4xl mb-3 block">🗑️</span>
+              <h2 className="text-xl font-bold mb-2">Delete habit permanently?</h2>
+              <p className="text-gray-400 text-sm">
+                &ldquo;{habitToDelete.name}&rdquo; and all its log entries will be
+                permanently deleted. This cannot be undone.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setHabitToDelete(null)}
+                className="flex-1 py-3 px-4 bg-dark-elevated hover:bg-dark-border
+                         text-gray-300 font-medium rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDelete(habitToDelete.id)}
+                className="flex-1 py-3 px-4 bg-accent-error hover:bg-accent-error/80
+                         text-white font-medium rounded-lg transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -8,6 +8,7 @@ interface SortableHabitRowProps {
   onEdit: (habit: Habit) => void;
   onArchive: (id: string) => void;
   onUnarchive: (id: string) => void;
+  onDelete: (habit: Habit) => void;
 }
 
 /**
@@ -19,6 +20,7 @@ export function SortableHabitRow({
   onEdit,
   onArchive,
   onUnarchive,
+  onDelete,
 }: SortableHabitRowProps) {
   const {
     attributes,
@@ -49,6 +51,7 @@ export function SortableHabitRow({
         onEdit={onEdit}
         onArchive={onArchive}
         onUnarchive={onUnarchive}
+        onDelete={onDelete}
       />
     </div>
   );
