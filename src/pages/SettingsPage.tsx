@@ -494,6 +494,36 @@ export function SettingsPage() {
         <div className="mt-3 text-[10px] text-gray-600">
           Exports include all habits (including archived) and all log entries.
         </div>
+
+        <details className="mt-3 group">
+          <summary className="text-[10px] text-gray-500 cursor-pointer hover:text-gray-400 list-none [&::-webkit-details-marker]:hidden">
+            <span className="inline-flex items-center gap-1">
+              <span className="group-open:rotate-90 transition-transform">▸</span>
+              Import file format
+            </span>
+          </summary>
+          <div className="mt-2 p-3 bg-dark-elevated rounded-lg border border-dark-border">
+            <p className="text-[10px] text-gray-400 mb-2">
+              The JSON file must have <code className="text-gray-300">schemaVersion: 1</code>, a{' '}
+              <code className="text-gray-300">habits</code> array, and a <code className="text-gray-300">logs</code> array.
+              Export a backup first to see the exact format.
+            </p>
+            <pre className="text-[9px] text-gray-500 overflow-x-auto font-mono whitespace-pre">
+{`{
+  "schemaVersion": 1,
+  "habits": [
+    { "id": "...", "name": "...", "icon": "📚", "color": "#f59e0b",
+      "scheduleDays": "everyday", "startDate": "YYYY-MM-DD",
+      "createdAt": "...", "updatedAt": "...", "archivedAt": null, "sortOrder": 0 }
+  ],
+  "logs": [
+    { "id": "...", "habitId": "habit-id", "date": "YYYY-MM-DD",
+      "status": "completed" | "skipped", "createdAt": "...", "updatedAt": "..." }
+  ]
+}`}
+            </pre>
+          </div>
+        </details>
       </div>
 
       {/* Danger Zone */}
