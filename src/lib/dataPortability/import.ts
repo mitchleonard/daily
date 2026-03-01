@@ -4,7 +4,7 @@
  * When logged in, writes to cloud; otherwise writes to local IndexedDB
  */
 
-import { db } from '../../db/database';
+import { db, now } from '../../db/database';
 import { logsRepository } from '../../db/logsRepository';
 import type { Habit, LogEntry } from '../../db/types';
 import type { ExportData, ImportValidation, ImportResult } from './types';
@@ -221,43 +221,36 @@ async function useCloud(): Promise<boolean> {
 }
 
 /**
- * Import data to cloud API (merge mode - never deletes existing data)
+ * Import data to cloud API (merge mode - matches habits by name to avoid duplicates)
  */
 async function importToCloud(data: ExportData): Promise<ImportResult> {
   const { logs: dedupedLogs, duplicatesRemoved } = deduplicateLogs(data.logs);
-  const habitIds = new Set(data.habits.map((h) => h.id));
 
-  // 1. Merge habits: create or update (never delete existing)
+  // Map: import habit ID -> actual habit ID (existing or newly created)
+  const habitIdMap = new Map<string, string>();
+  const existingHabits = await api.getHabits(true);
+  const existingByName = new Map<string, { id: string }>(
+    existingHabits.map((h) => [h.name, { id: h.id }])
+  );
+
+  // 1. Merge habits by name: update existing or create new
   for (const habit of data.habits as Habit[]) {
-    try {
-      const existing = await api.getHabit(habit.id);
-      if (existing) {
-        await api.updateHabit(habit.id, {
-          name: habit.name,
-          icon: habit.icon,
-          color: habit.color,
-          scheduleDays: habit.scheduleDays,
-          startDate: habit.startDate,
-          archivedAt: habit.archivedAt,
-          sortOrder: habit.sortOrder,
-        });
-      } else {
-        await api.createHabit({
-          id: habit.id,
-          name: habit.name,
-          icon: habit.icon,
-          color: habit.color,
-          scheduleDays: habit.scheduleDays,
-          startDate: habit.startDate,
-          createdAt: habit.createdAt,
-          updatedAt: habit.updatedAt,
-          archivedAt: habit.archivedAt,
-          sortOrder: habit.sortOrder,
-        });
-      }
-    } catch {
-      // getHabit throws for 404; create as new
-      await api.createHabit({
+    const existing = existingByName.get(habit.name);
+    if (existing) {
+      // Match by name - update existing habit, use its ID for logs
+      await api.updateHabit(existing.id, {
+        name: habit.name,
+        icon: habit.icon,
+        color: habit.color,
+        scheduleDays: habit.scheduleDays,
+        startDate: habit.startDate,
+        archivedAt: habit.archivedAt,
+        sortOrder: habit.sortOrder,
+      });
+      habitIdMap.set(habit.id, existing.id);
+    } else {
+      // New habit - create with import ID (or generate; API may accept id)
+      const created = await api.createHabit({
         id: habit.id,
         name: habit.name,
         icon: habit.icon,
@@ -269,21 +262,25 @@ async function importToCloud(data: ExportData): Promise<ImportResult> {
         archivedAt: habit.archivedAt,
         sortOrder: habit.sortOrder,
       });
+      habitIdMap.set(habit.id, created.id);
     }
   }
 
-  // 2. Merge logs: upsert only (never delete existing)
+  // 2. Merge logs: remap habitId to actual ID, then upsert
   for (const log of dedupedLogs) {
-    if (habitIds.has(log.habitId)) {
-      await api.upsertLog(log.habitId, log.date, log.status);
+    const actualHabitId = habitIdMap.get(log.habitId);
+    if (actualHabitId) {
+      await api.upsertLog(actualHabitId, log.date, log.status);
     }
   }
 
+  const logsCount = dedupedLogs.filter((l) => habitIdMap.has(l.habitId)).length;
   return {
     success: true,
     habitsImported: data.habits.length,
-    logsImported: dedupedLogs.filter((l) => habitIds.has(l.habitId)).length,
+    logsImported: logsCount,
     duplicateLogsSkipped: duplicatesRemoved,
+    toCloud: true,
   };
 }
 
@@ -300,13 +297,37 @@ export async function importData(data: ExportData): Promise<ImportResult> {
       return importToCloud(data);
     }
 
-    // Local import (merge - never clear existing data)
+    // Local import (merge by name - avoid duplicates)
     await db.transaction('rw', [db.habits, db.logs], async () => {
-      if (data.habits.length > 0) {
-        await db.habits.bulkPut(data.habits as Habit[]);
+      const existingHabits = await db.habits.toArray();
+      const existingByName = new Map(existingHabits.map((h) => [h.name, h]));
+      const habitIdMap = new Map<string, string>();
+
+      for (const habit of data.habits as Habit[]) {
+        const existing = existingByName.get(habit.name);
+        if (existing) {
+          await db.habits.put({
+            ...existing,
+            icon: habit.icon,
+            color: habit.color,
+            scheduleDays: habit.scheduleDays,
+            startDate: habit.startDate,
+            archivedAt: habit.archivedAt,
+            sortOrder: habit.sortOrder,
+            updatedAt: now(),
+          });
+          habitIdMap.set(habit.id, existing.id);
+        } else {
+          await db.habits.put(habit);
+          habitIdMap.set(habit.id, habit.id);
+        }
       }
+
       for (const log of dedupedLogs) {
-        await logsRepository.upsert({ habitId: log.habitId, date: log.date, status: log.status });
+        const actualHabitId = habitIdMap.get(log.habitId);
+        if (actualHabitId) {
+          await logsRepository.upsert({ habitId: actualHabitId, date: log.date, status: log.status });
+        }
       }
     });
 
@@ -315,6 +336,7 @@ export async function importData(data: ExportData): Promise<ImportResult> {
       habitsImported: data.habits.length,
       logsImported: dedupedLogs.length,
       duplicateLogsSkipped: duplicatesRemoved,
+      toCloud: false,
     };
   } catch (error) {
     console.error('Import failed:', error);

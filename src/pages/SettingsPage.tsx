@@ -294,13 +294,15 @@ export function SettingsPage() {
       const result = await importData(pendingImport.data);
       
       if (result.success) {
-        let msg = `Imported ${result.habitsImported} habits and ${result.logsImported} logs.`;
+        let msg = `Imported ${result.habitsImported} habits and ${result.logsImported} logs${result.toCloud ? ' to your account' : ''}.`;
         if (result.duplicateLogsSkipped > 0) {
-          msg += ` (${result.duplicateLogsSkipped} duplicate logs merged)`;
+          msg += ` (${result.duplicateLogsSkipped} duplicates merged)`;
+        }
+        if (result.toCloud) {
+          msg += ' If data does not appear, try a hard refresh (Cmd+Shift+R).';
         }
         showMessage('success', msg);
         await loadStats();
-        // Navigate to home after successful import
         setTimeout(() => navigate('/'), 1000);
       } else {
         showMessage('error', `Import failed: ${result.error}`);

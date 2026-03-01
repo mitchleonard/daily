@@ -34,6 +34,8 @@ export interface ImportResult {
   habitsImported: number;
   logsImported: number;
   duplicateLogsSkipped: number;
+  /** true when import went to cloud (logged-in mode) */
+  toCloud?: boolean;
   error?: string;
 }
 
