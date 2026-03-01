@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import type { Habit } from '../../db/types';
 import { formatSchedule } from './constants';
 
@@ -27,8 +28,17 @@ export function HabitRow({
   onDelete,
 }: HabitRowProps) {
   const [showMenu, setShowMenu] = useState(false);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
 
   const scheduleText = formatSchedule(habit.scheduleDays);
+
+  useEffect(() => {
+    if (showMenu && menuButtonRef.current) {
+      const rect = menuButtonRef.current.getBoundingClientRect();
+      setMenuPosition({ top: rect.bottom + 4, left: rect.right - 140 });
+    }
+  }, [showMenu]);
 
   return (
     <div 
@@ -99,6 +109,7 @@ export function HabitRow({
       {/* Actions menu */}
       <div className="relative">
         <button
+          ref={menuButtonRef}
           type="button"
           onClick={() => setShowMenu(!showMenu)}
           className="w-10 h-10 flex items-center justify-center text-gray-400 
@@ -108,18 +119,21 @@ export function HabitRow({
           ⋮
         </button>
 
-        {showMenu && (
-          <>
-            {/* Backdrop to close menu */}
-            <div 
-              className="fixed inset-0 z-10" 
-              onClick={() => setShowMenu(false)} 
-            />
-            
-            {/* Menu dropdown */}
-            <div className="absolute right-0 top-full mt-1 z-20 
-                            bg-dark-elevated border border-dark-border rounded-lg
-                            shadow-xl min-w-[140px] py-1">
+        {showMenu &&
+          createPortal(
+            <>
+              {/* Backdrop to close menu */}
+              <div
+                className="fixed inset-0 z-[100]"
+                onClick={() => setShowMenu(false)}
+              />
+
+              {/* Menu dropdown - portal avoids inheriting row opacity */}
+              <div
+                className="fixed z-[101] bg-dark-elevated border border-dark-border rounded-lg
+                           shadow-xl min-w-[140px] py-1"
+                style={{ top: menuPosition.top, left: menuPosition.left }}
+              >
               <button
                 type="button"
                 onClick={() => {
@@ -169,7 +183,8 @@ export function HabitRow({
                 🗑️ Delete
               </button>
             </div>
-          </>
+          </>,
+          document.body
         )}
       </div>
     </div>
