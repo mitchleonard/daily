@@ -138,7 +138,7 @@ function ImportConfirmModal({
           <span className="text-4xl mb-3 block">📥</span>
           <h2 className="text-xl font-bold mb-2">Import Data?</h2>
           <p className="text-gray-400 text-sm">
-            This will replace your current data with:
+            Add or update habits and logs from the file:
           </p>
         </div>
 
@@ -165,7 +165,7 @@ function ImportConfirmModal({
         )}
 
         <p className="text-sm text-gray-500 text-center mb-4">
-          Your current habits and logs will be permanently replaced.
+          Your existing data will not be deleted. Matching habits and logs will be updated; new ones will be added.
         </p>
 
         <div className="flex gap-3">
@@ -466,7 +466,7 @@ export function SettingsPage() {
       <div className="card">
         <h2 className="text-sm font-medium text-gray-300 mb-3">📦 Backup & Restore</h2>
         <p className="text-gray-500 text-xs mb-4">
-          Export your data to a JSON file for backup, or import from a previous export.
+          Export your data to a JSON file for backup. Import merges habits and logs from a file without deleting existing data—ideal for bulk edits or seeding from other sources.
         </p>
         
         <div className="flex gap-3">

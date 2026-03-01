@@ -1,12 +1,16 @@
 /**
  * Import functionality
  * Validates and imports habit data from JSON files
+ * When logged in, writes to cloud; otherwise writes to local IndexedDB
  */
 
 import { db } from '../../db/database';
+import { logsRepository } from '../../db/logsRepository';
 import type { Habit, LogEntry } from '../../db/types';
 import type { ExportData, ImportValidation, ImportResult } from './types';
 import { SUPPORTED_SCHEMA_VERSIONS } from './types';
+import { isAwsConfigured, getIdToken } from '../auth';
+import * as api from '../api';
 
 /**
  * Read file content as text
@@ -210,32 +214,102 @@ function deduplicateLogs(logs: LogEntry[]): { logs: LogEntry[]; duplicatesRemove
   };
 }
 
+async function useCloud(): Promise<boolean> {
+  if (!isAwsConfigured()) return false;
+  const token = await getIdToken();
+  return !!token;
+}
+
 /**
- * Import data into the database
- * Clears existing data and replaces with imported data
+ * Import data to cloud API (merge mode - never deletes existing data)
+ */
+async function importToCloud(data: ExportData): Promise<ImportResult> {
+  const { logs: dedupedLogs, duplicatesRemoved } = deduplicateLogs(data.logs);
+  const habitIds = new Set(data.habits.map((h) => h.id));
+
+  // 1. Merge habits: create or update (never delete existing)
+  for (const habit of data.habits as Habit[]) {
+    try {
+      const existing = await api.getHabit(habit.id);
+      if (existing) {
+        await api.updateHabit(habit.id, {
+          name: habit.name,
+          icon: habit.icon,
+          color: habit.color,
+          scheduleDays: habit.scheduleDays,
+          startDate: habit.startDate,
+          archivedAt: habit.archivedAt,
+          sortOrder: habit.sortOrder,
+        });
+      } else {
+        await api.createHabit({
+          id: habit.id,
+          name: habit.name,
+          icon: habit.icon,
+          color: habit.color,
+          scheduleDays: habit.scheduleDays,
+          startDate: habit.startDate,
+          createdAt: habit.createdAt,
+          updatedAt: habit.updatedAt,
+          archivedAt: habit.archivedAt,
+          sortOrder: habit.sortOrder,
+        });
+      }
+    } catch {
+      // getHabit throws for 404; create as new
+      await api.createHabit({
+        id: habit.id,
+        name: habit.name,
+        icon: habit.icon,
+        color: habit.color,
+        scheduleDays: habit.scheduleDays,
+        startDate: habit.startDate,
+        createdAt: habit.createdAt,
+        updatedAt: habit.updatedAt,
+        archivedAt: habit.archivedAt,
+        sortOrder: habit.sortOrder,
+      });
+    }
+  }
+
+  // 2. Merge logs: upsert only (never delete existing)
+  for (const log of dedupedLogs) {
+    if (habitIds.has(log.habitId)) {
+      await api.upsertLog(log.habitId, log.date, log.status);
+    }
+  }
+
+  return {
+    success: true,
+    habitsImported: data.habits.length,
+    logsImported: dedupedLogs.filter((l) => habitIds.has(l.habitId)).length,
+    duplicateLogsSkipped: duplicatesRemoved,
+  };
+}
+
+/**
+ * Import data into the database (merge mode)
+ * Adds/updates habits and logs from the file without deleting existing data.
+ * Use for: bulk editing, seeding from other sources, or baseline for new users.
  */
 export async function importData(data: ExportData): Promise<ImportResult> {
   try {
-    // Deduplicate logs
     const { logs: dedupedLogs, duplicatesRemoved } = deduplicateLogs(data.logs);
-    
-    // Use a transaction to ensure atomicity
+
+    if (await useCloud()) {
+      return importToCloud(data);
+    }
+
+    // Local import (merge - never clear existing data)
     await db.transaction('rw', [db.habits, db.logs], async () => {
-      // Clear existing data
-      await db.habits.clear();
-      await db.logs.clear();
-      
-      // Insert habits
       if (data.habits.length > 0) {
-        await db.habits.bulkAdd(data.habits as Habit[]);
+        await db.habits.bulkPut(data.habits as Habit[]);
       }
-      
-      // Insert logs
-      if (dedupedLogs.length > 0) {
-        await db.logs.bulkAdd(dedupedLogs as LogEntry[]);
+      for (const log of dedupedLogs) {
+        await logsRepository.upsert({ habitId: log.habitId, date: log.date, status: log.status });
       }
     });
-    
+
     return {
       success: true,
       habitsImported: data.habits.length,
