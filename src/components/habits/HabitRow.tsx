@@ -33,10 +33,19 @@ export function HabitRow({
 
   const scheduleText = formatSchedule(habit.scheduleDays);
 
+  // Flip menu above button when not enough space below (e.g. last habit in archived section)
+  const MENU_HEIGHT_ESTIMATE = 145; // 3 buttons ~40px each + padding
+
   useEffect(() => {
     if (showMenu && menuButtonRef.current) {
       const rect = menuButtonRef.current.getBoundingClientRect();
-      setMenuPosition({ top: rect.bottom + 4, left: rect.right - 140 });
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const openAbove = spaceBelow < MENU_HEIGHT_ESTIMATE + 8;
+
+      setMenuPosition({
+        top: openAbove ? rect.top - MENU_HEIGHT_ESTIMATE - 4 : rect.bottom + 4,
+        left: rect.right - 140,
+      });
     }
   }, [showMenu]);
 
