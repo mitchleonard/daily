@@ -318,24 +318,21 @@ export function computeOverviewStats(
     .sort((a, b) => b.value - a.value)
     .slice(0, 3);
   
-  // Slipping (top 3 negative delta, min 6 scheduled days)
-  const slipping: HabitRanking[] = habits
+  // Needs Attention: habits scheduled for today that aren't completed yet
+  const needsAttention: HabitRanking[] = habits
     .filter(h => {
-      const stats = habitStats.get(h.id);
-      return stats && stats.scheduledDays30 >= 6 && stats.trendDelta < 0;
+      if (!isScheduledDay(today, h.scheduleDays) || today < h.startDate) {
+        return false;
+      }
+      return logsMap.get(`${h.id}:${today}`) !== 'completed';
     })
-    .map(h => {
-      const stats = habitStats.get(h.id)!;
-      return {
-        habitId: h.id,
-        name: h.name,
-        icon: h.icon,
-        color: h.color,
-        value: stats.trendDelta,
-      };
-    })
-    .sort((a, b) => a.value - b.value) // Most negative first
-    .slice(0, 3);
+    .map(h => ({
+      habitId: h.id,
+      name: h.name,
+      icon: h.icon,
+      color: h.color,
+      value: 1, // Unused for display
+    }));
   
   return {
     overallRate7,
@@ -344,7 +341,7 @@ export function computeOverviewStats(
     todayScheduled,
     todayScore,
     mostConsistent,
-    slipping,
+    needsAttention,
   };
 }
 

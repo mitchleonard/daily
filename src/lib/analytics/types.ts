@@ -28,7 +28,8 @@ export interface OverviewStats {
   todayScheduled: number;
   todayScore: number; // 0-1
   mostConsistent: HabitRanking[];
-  slipping: HabitRanking[];
+  /** Habits scheduled for today that haven't been completed yet */
+  needsAttention: HabitRanking[];
 }
 
 export interface HabitRanking {
