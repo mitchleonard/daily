@@ -221,7 +221,7 @@ async function useCloud(): Promise<boolean> {
 }
 
 /**
- * Import data to cloud API (merge mode - matches habits by name to avoid duplicates)
+ * Import data to cloud API (merge mode - case-insensitive name match to avoid duplicates)
  */
 async function importToCloud(data: ExportData): Promise<ImportResult> {
   const { logs: dedupedLogs, duplicatesRemoved } = deduplicateLogs(data.logs);
@@ -229,17 +229,22 @@ async function importToCloud(data: ExportData): Promise<ImportResult> {
   // Map: import habit ID -> actual habit ID (existing or newly created)
   const habitIdMap = new Map<string, string>();
   const existingHabits = await api.getHabits(true);
-  const existingByName = new Map<string, { id: string }>(
-    existingHabits.map((h) => [h.name, { id: h.id }])
-  );
+  // Case-insensitive lookup: first existing habit per lowercase name (keeps user's capitalization)
+  const existingByLowerName = new Map<string, { id: string; name: string }>();
+  for (const h of existingHabits) {
+    const key = h.name.toLowerCase();
+    if (!existingByLowerName.has(key)) {
+      existingByLowerName.set(key, { id: h.id, name: h.name });
+    }
+  }
 
-  // 1. Merge habits by name: update existing or create new
+  // 1. Merge habits by name (case-insensitive): keep existing name, update other fields
   for (const habit of data.habits as Habit[]) {
-    const existing = existingByName.get(habit.name);
+    const existing = existingByLowerName.get(habit.name.toLowerCase());
     if (existing) {
-      // Match by name - update existing habit, use its ID for logs
+      // Match - keep user's name, update icon/color/schedule etc.
       await api.updateHabit(existing.id, {
-        name: habit.name,
+        name: existing.name, // keep what user entered
         icon: habit.icon,
         color: habit.color,
         scheduleDays: habit.scheduleDays,
@@ -249,7 +254,7 @@ async function importToCloud(data: ExportData): Promise<ImportResult> {
       });
       habitIdMap.set(habit.id, existing.id);
     } else {
-      // New habit - create with import ID (or generate; API may accept id)
+      // New habit - create with import data
       const created = await api.createHabit({
         id: habit.id,
         name: habit.name,
@@ -297,17 +302,24 @@ export async function importData(data: ExportData): Promise<ImportResult> {
       return importToCloud(data);
     }
 
-    // Local import (merge by name - avoid duplicates)
+    // Local import (merge by name case-insensitive - keep user's name, avoid duplicates)
     await db.transaction('rw', [db.habits, db.logs], async () => {
       const existingHabits = await db.habits.toArray();
-      const existingByName = new Map(existingHabits.map((h) => [h.name, h]));
+      const existingByLowerName = new Map<string, Habit>();
+      for (const h of existingHabits) {
+        const key = h.name.toLowerCase();
+        if (!existingByLowerName.has(key)) {
+          existingByLowerName.set(key, h);
+        }
+      }
       const habitIdMap = new Map<string, string>();
 
       for (const habit of data.habits as Habit[]) {
-        const existing = existingByName.get(habit.name);
+        const existing = existingByLowerName.get(habit.name.toLowerCase());
         if (existing) {
           await db.habits.put({
             ...existing,
+            name: existing.name, // keep what user entered
             icon: habit.icon,
             color: habit.color,
             scheduleDays: habit.scheduleDays,
