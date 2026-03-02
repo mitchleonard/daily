@@ -3,7 +3,7 @@
  */
 
 /**
- * Color palette for habits (10 colors)
+ * Color palette for habits
  */
 export const HABIT_COLORS = [
   { id: 'green', hex: '#22c55e', name: 'Green' },
@@ -16,6 +16,9 @@ export const HABIT_COLORS = [
   { id: 'pink', hex: '#ec4899', name: 'Pink' },
   { id: 'orange', hex: '#f97316', name: 'Orange' },
   { id: 'amber', hex: '#f59e0b', name: 'Amber' },
+  { id: 'red', hex: '#ef4444', name: 'Red' },
+  { id: 'white', hex: '#ffffff', name: 'White' },
+  { id: 'black', hex: '#171717', name: 'Black' },
 ] as const;
 
 /**
