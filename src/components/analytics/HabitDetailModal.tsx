@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { Habit } from '../../db/types';
-import { InfoIcon } from './InfoIcon';
 import type { HabitStats, LogsMap } from '../../lib/analytics';
 import { getDaysAgo, getToday, generateDateRange, isScheduledDay } from '../../lib/analytics';
 import { formatSchedule } from '../habits/constants';
@@ -126,36 +125,31 @@ export function HabitDetailModal({ habit, stats, logsMap, onClose }: HabitDetail
         </div>
 
         {/* Stats Summary */}
-        <div className="grid grid-cols-4 gap-2 mb-4">
+        <div className="grid grid-cols-4 gap-2 mb-2">
           <div className="bg-dark-elevated rounded-lg py-2 text-center">
             <div className="text-xl font-bold text-accent-primary">{stats.currentStreak}</div>
-            <div className="text-[10px] text-gray-500 flex items-center justify-center gap-0.5">
-              Current <InfoIcon tooltip="Consecutive scheduled days completed based on your habit's schedule (not raw calendar days)" />
-            </div>
+            <div className="text-[10px] text-gray-500">Current</div>
           </div>
           <div className="bg-dark-elevated rounded-lg py-2 text-center">
             <div className="text-xl font-bold text-gray-300">{stats.longestStreak}</div>
-            <div className="text-[10px] text-gray-500 flex items-center justify-center gap-0.5">
-              Longest <InfoIcon tooltip="Longest streak of consecutive scheduled days in the last 365 days" />
-            </div>
+            <div className="text-[10px] text-gray-500">Longest</div>
           </div>
           <div className="bg-dark-elevated rounded-lg py-2 text-center">
             <div className="text-xl font-bold text-gray-300">
               {stats.scheduledDays30 > 0 ? formatPercent(stats.rate30) : '—'}
             </div>
-            <div className="text-[10px] text-gray-500 flex items-center justify-center gap-0.5">
-              30d Rate <InfoIcon tooltip="Completion rate = completed ÷ scheduled days in the last 30 days" />
-            </div>
+            <div className="text-[10px] text-gray-500">30d Rate</div>
           </div>
           <div className="bg-dark-elevated rounded-lg py-2 text-center">
             <div className="text-xl font-bold text-gray-300">
               {stats.scheduledDays90 > 0 ? formatPercent(stats.rate90) : '—'}
             </div>
-            <div className="text-[10px] text-gray-500 flex items-center justify-center gap-0.5">
-              90d Rate <InfoIcon tooltip="Completion rate = completed ÷ scheduled days in the last 90 days" />
-            </div>
+            <div className="text-[10px] text-gray-500">90d Rate</div>
           </div>
         </div>
+        <p className="text-[9px] text-gray-600 mb-4 leading-tight">
+          Streaks = consecutive scheduled days. Rates = completed ÷ scheduled days.
+        </p>
 
         {/* 90-Day Heat Strip */}
         <div className="mb-4">

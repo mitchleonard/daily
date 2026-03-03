@@ -71,9 +71,9 @@ export function useAnalytics(): UseAnalyticsResult {
       const overviewStats = computeOverviewStats(allHabits, stats, logsMap, today);
       setOverview(overviewStats);
       
-      // Compute connections (only for active habits, limited compute)
+      // Compute connections for all active habits
       const activeHabits = allHabits.filter(h => h.archivedAt === null);
-      if (activeHabits.length >= 2 && activeHabits.length <= 15) {
+      if (activeHabits.length >= 2) {
         const conns = computeHabitConnections(activeHabits, logsMap, today);
         setConnections(conns);
       } else {

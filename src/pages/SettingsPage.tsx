@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { seedDatabase, clearDatabase, getDatabaseStats } from '../db';
+import { seedDatabase, clearDatabase, getDatabaseStats, cloudHabitsRepository, cloudLogsRepository } from '../db';
 import {
   exportAllData,
   validateImportData,
@@ -209,19 +209,32 @@ export function SettingsPage() {
     warnings: string[];
   } | null>(null);
 
-  // Load stats on mount
-  useEffect(() => {
-    loadStats();
-  }, []);
-
-  const loadStats = async () => {
+  const loadStats = useCallback(async () => {
     try {
-      const dbStats = await getDatabaseStats();
-      setStats(dbStats);
+      if (user && isConfigured) {
+        const [habitCount, totalHabitCount, logCount] = await Promise.all([
+          cloudHabitsRepository.count(false),
+          cloudHabitsRepository.count(true),
+          cloudLogsRepository.count(),
+        ]);
+        setStats({
+          habitCount,
+          logCount,
+          archivedHabitCount: totalHabitCount - habitCount,
+        });
+      } else {
+        const dbStats = await getDatabaseStats();
+        setStats(dbStats);
+      }
     } catch (err) {
       console.error('Failed to load stats:', err);
     }
-  };
+  }, [user, isConfigured]);
+
+  // Load stats on mount and when user changes (e.g. sign in/out)
+  useEffect(() => {
+    loadStats();
+  }, [loadStats]);
 
   const showMessage = (type: MessageType, text: string) => {
     setMessage({ type, text });

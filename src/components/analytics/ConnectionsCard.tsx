@@ -19,9 +19,6 @@ export function ConnectionsCard({ connections, activeHabitsCount }: ConnectionsC
   emptyReasons.push(
     'Need enough overlap – each habit pair needs at least 10 days where habit A was completed and 5 days where it wasn\'t (for statistical validity)'
   );
-  if (activeHabitsCount > 15) {
-    emptyReasons.push('Max 15 habits – with more than 15 active habits, connections are hidden for performance');
-  }
 
   return (
     <div className="card">

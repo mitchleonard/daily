@@ -79,9 +79,9 @@ export function AnalyticsPage() {
       const overviewStats = computeOverviewStats(allHabits, stats, lMap, today);
       setOverview(overviewStats);
       
-      // Compute connections (only for active habits, limited count)
+      // Compute connections for all active habits
       const activeHabits = allHabits.filter(h => h.archivedAt === null);
-      if (activeHabits.length >= 2 && activeHabits.length <= 15) {
+      if (activeHabits.length >= 2) {
         const conns = computeHabitConnections(activeHabits, lMap, today);
         setConnections(conns);
       } else {
