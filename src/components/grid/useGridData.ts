@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { cloudHabitsRepository as habitsRepository, cloudLogsRepository as logsRepository } from '../../db';
+import { triggerSuccess } from '../../lib/haptics';
 import type { Habit, LogEntry } from '../../db/types';
 import { getGridDates, getToday, getTodayIndex } from './utils';
 
@@ -164,6 +165,7 @@ export function useGridData() {
     // Optimistic update
     if (!existing) {
       // Empty → completed
+      triggerSuccess();
       const optimisticLog: LogEntry = {
         id: 'temp-' + Date.now(),
         habitId,
@@ -193,6 +195,7 @@ export function useGridData() {
       }
     } else {
       // Skipped → completed (replace)
+      triggerSuccess();
       const optimisticLog: LogEntry = { ...existing, status: 'completed' };
       updateLogOptimistic(habitId, date, optimisticLog);
       

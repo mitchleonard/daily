@@ -11,6 +11,7 @@ import {
   getToday,
   getDaysAgo,
 } from '../lib/analytics';
+import { triggerBuzz } from '../lib/haptics';
 import {
   OverviewCard,
   HabitStatsCard,
@@ -169,6 +170,7 @@ export function AnalyticsPage() {
               <button
                 type="button"
                 onClick={() => {
+                  triggerBuzz();
                   retriedEmptyRef.current = false;
                   loadAnalytics();
                 }}
@@ -197,7 +199,10 @@ export function AnalyticsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Analytics</h1>
         <button
-          onClick={loadAnalytics}
+          onClick={() => {
+            triggerBuzz();
+            loadAnalytics();
+          }}
           className="text-sm text-gray-400 hover:text-white transition-colors"
           title="Refresh"
         >

@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom';
+import { triggerSelection } from '../lib/haptics';
 
 /**
  * Navigation item configuration
@@ -28,6 +29,7 @@ export function Layout() {
             <NavLink
               key={item.path}
               to={item.path}
+              onClick={() => triggerSelection()}
               className={({ isActive }) =>
                 `bottom-nav-item flex-1 ${isActive ? 'active' : ''}`
               }
