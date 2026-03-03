@@ -157,13 +157,14 @@ export function VirtualizedGrid({
             onPointerDown={(e) => handlePointerDown(e, habit.id, date)}
             onPointerUp={handlePointerUp}
             onPointerCancel={handlePointerCancel}
+            onKeyActivate={() => onSingleTap(habit.id, date)}
           />
         );
       }
     }
     
     return cells;
-  }, [visibleRange, habits, dates, getLog, handlePointerDown, handlePointerUp, handlePointerCancel]);
+  }, [visibleRange, habits, dates, getLog, handlePointerDown, handlePointerUp, handlePointerCancel, onSingleTap]);
 
   // Render header dates with month indicators
   const headerDates = useMemo(() => {

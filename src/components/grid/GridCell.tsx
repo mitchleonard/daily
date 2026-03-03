@@ -11,6 +11,7 @@ interface GridCellProps {
   onPointerDown: (e: React.PointerEvent) => void;
   onPointerUp: (e: React.PointerEvent) => void;
   onPointerCancel: () => void;
+  onKeyActivate?: () => void;
 }
 
 /**
@@ -26,6 +27,7 @@ export const GridCell = memo(function GridCell({
   onPointerDown,
   onPointerUp,
   onPointerCancel,
+  onKeyActivate,
 }: GridCellProps) {
   const [isPressed, setIsPressed] = useState(false);
   const status = log?.status;
@@ -67,9 +69,20 @@ export const GridCell = memo(function GridCell({
     setIsPressed(false);
     onPointerCancel();
   };
-  
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onKeyActivate?.();
+    }
+  };
+
   return (
     <div
+      role="button"
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+      aria-label="Toggle habit completion"
       style={{
         ...style,
         width: CELL_SIZE,
@@ -79,6 +92,7 @@ export const GridCell = memo(function GridCell({
         absolute flex items-center justify-center
         border-r border-b border-dark-border/50
         select-none touch-manipulation
+        outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent-primary/50
         ${isToday ? 'bg-accent-primary/10' : ''}
       `}
       onPointerDown={handlePointerDown}
