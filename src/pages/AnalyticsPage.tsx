@@ -208,8 +208,11 @@ export function AnalyticsPage() {
       {/* Overview */}
       {overview && <OverviewCard overview={overview} />}
 
-      {/* Connections */}
-      {connections.length > 0 && <ConnectionsCard connections={connections} />}
+      {/* Connections - always visible, shows empty state with explanations when no connections */}
+      <ConnectionsCard
+        connections={connections}
+        activeHabitsCount={habits.filter((h) => h.archivedAt === null).length}
+      />
 
       {/* Habits List */}
       <div>

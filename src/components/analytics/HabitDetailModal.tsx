@@ -1,5 +1,7 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { Habit } from '../../db/types';
+import { InfoIcon } from './InfoIcon';
 import type { HabitStats, LogsMap } from '../../lib/analytics';
 import { getDaysAgo, getToday, generateDateRange, isScheduledDay } from '../../lib/analytics';
 import { formatSchedule } from '../habits/constants';
@@ -27,6 +29,15 @@ export function HabitDetailModal({ habit, stats, logsMap, onClose }: HabitDetail
     return () => window.removeEventListener('keydown', handleEscape);
   }, [onClose]);
 
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, []);
+
   // Generate 90-day heat strip data
   const heatStripData = useMemo(() => {
     const dates = generateDateRange(getDaysAgo(89, today), today);
@@ -37,38 +48,58 @@ export function HabitDetailModal({ habit, stats, logsMap, onClose }: HabitDetail
     });
   }, [habit, logsMap, today]);
 
-  // Last 10 logs
-  const recentLogs = useMemo(() => {
+  const [showMoreActivity, setShowMoreActivity] = useState(false);
+
+  // Last 10 logs from 30 days (default); when expanded, up to 90 days
+  const { recentLogs, hasMore, totalInWindow } = useMemo(() => {
     const entries: Array<{ date: string; status: 'completed' | 'skipped' }> = [];
-    const dates = generateDateRange(getDaysAgo(30, today), today).reverse();
-    
+    const startDate = showMoreActivity ? getDaysAgo(89, today) : getDaysAgo(29, today);
+    const dates = generateDateRange(startDate, today).reverse();
+    const limit = showMoreActivity ? 999 : 10;
+
     for (const date of dates) {
       const status = logsMap.get(`${habit.id}:${date}`);
       if (status) {
         entries.push({ date, status });
-        if (entries.length >= 10) break;
+        if (entries.length >= limit) break;
       }
     }
-    
-    return entries;
-  }, [habit.id, logsMap, today]);
+
+    // Check if there are more entries in the 31-90 day range (only relevant when collapsed)
+    let hasMoreEntries = false;
+    if (!showMoreActivity) {
+      const olderDates = generateDateRange(getDaysAgo(89, today), getDaysAgo(30, today));
+      hasMoreEntries = olderDates.some(
+        (d) => logsMap.get(`${habit.id}:${d}`) === 'completed' || logsMap.get(`${habit.id}:${d}`) === 'skipped'
+      );
+    }
+
+    return {
+      recentLogs: entries,
+      hasMore: hasMoreEntries,
+      totalInWindow: entries.length,
+    };
+  }, [habit.id, logsMap, today, showMoreActivity]);
 
   // Format schedule
   const scheduleText = formatSchedule(habit.scheduleDays);
 
-  return (
+  const modalContent = (
     <div 
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
       onClick={onClose}
     >
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      {/* Backdrop - fixed with full viewport coverage to avoid blur sliver */}
+      <div 
+        className="fixed inset-0 min-h-screen min-h-[100dvh] bg-black/60 backdrop-blur-sm"
+        aria-hidden
+      />
       
       {/* Modal */}
       <div 
-        className="relative w-full max-w-lg max-h-[85vh] overflow-y-auto
+        className="relative w-full max-w-lg max-h-[85vh] overflow-y-auto overflow-x-hidden
                    bg-dark-surface border-t sm:border border-dark-border 
-                   sm:rounded-2xl rounded-t-2xl p-5"
+                   sm:rounded-2xl rounded-t-2xl p-5 touch-auto overscroll-contain"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -98,23 +129,31 @@ export function HabitDetailModal({ habit, stats, logsMap, onClose }: HabitDetail
         <div className="grid grid-cols-4 gap-2 mb-4">
           <div className="bg-dark-elevated rounded-lg py-2 text-center">
             <div className="text-xl font-bold text-accent-primary">{stats.currentStreak}</div>
-            <div className="text-[10px] text-gray-500">Current</div>
+            <div className="text-[10px] text-gray-500 flex items-center justify-center gap-0.5">
+              Current <InfoIcon tooltip="Consecutive scheduled days completed based on your habit's schedule (not raw calendar days)" />
+            </div>
           </div>
           <div className="bg-dark-elevated rounded-lg py-2 text-center">
             <div className="text-xl font-bold text-gray-300">{stats.longestStreak}</div>
-            <div className="text-[10px] text-gray-500">Longest</div>
+            <div className="text-[10px] text-gray-500 flex items-center justify-center gap-0.5">
+              Longest <InfoIcon tooltip="Longest streak of consecutive scheduled days in the last 365 days" />
+            </div>
           </div>
           <div className="bg-dark-elevated rounded-lg py-2 text-center">
             <div className="text-xl font-bold text-gray-300">
               {stats.scheduledDays30 > 0 ? formatPercent(stats.rate30) : '—'}
             </div>
-            <div className="text-[10px] text-gray-500">30d Rate</div>
+            <div className="text-[10px] text-gray-500 flex items-center justify-center gap-0.5">
+              30d Rate <InfoIcon tooltip="Completion rate = completed ÷ scheduled days in the last 30 days" />
+            </div>
           </div>
           <div className="bg-dark-elevated rounded-lg py-2 text-center">
             <div className="text-xl font-bold text-gray-300">
               {stats.scheduledDays90 > 0 ? formatPercent(stats.rate90) : '—'}
             </div>
-            <div className="text-[10px] text-gray-500">90d Rate</div>
+            <div className="text-[10px] text-gray-500 flex items-center justify-center gap-0.5">
+              90d Rate <InfoIcon tooltip="Completion rate = completed ÷ scheduled days in the last 90 days" />
+            </div>
           </div>
         </div>
 
@@ -152,19 +191,24 @@ export function HabitDetailModal({ habit, stats, logsMap, onClose }: HabitDetail
         {recentLogs.length > 0 && (
           <div>
             <h3 className="text-sm font-medium text-gray-300 mb-2">Recent Activity</h3>
+            <p className="text-[11px] text-gray-500 mb-2">
+              {showMoreActivity
+                ? `Showing all entries from the last 90 days (${totalInWindow} total)`
+                : 'Showing 10 most recent entries from the last 30 days'}
+            </p>
             <div className="space-y-1">
               {recentLogs.map(({ date, status }) => {
                 const d = new Date(date + 'T00:00:00');
-                const formatted = d.toLocaleDateString('en-US', { 
-                  weekday: 'short', 
-                  month: 'short', 
-                  day: 'numeric' 
+                const formatted = d.toLocaleDateString('en-US', {
+                  weekday: 'short',
+                  month: 'short',
+                  day: 'numeric',
                 });
-                
+
                 return (
-                  <div 
+                  <div
                     key={date}
-                    className="flex items-center justify-between py-1.5 px-2 
+                    className="flex items-center justify-between py-1.5 px-2
                                bg-dark-elevated rounded-lg text-sm"
                   >
                     <span className="text-gray-400">{formatted}</span>
@@ -175,9 +219,21 @@ export function HabitDetailModal({ habit, stats, logsMap, onClose }: HabitDetail
                 );
               })}
             </div>
+            {hasMore && (
+              <button
+                type="button"
+                onClick={() => setShowMoreActivity(true)}
+                className="mt-2 w-full py-2 text-sm text-accent-primary hover:text-accent-primary/80
+                           border border-dark-border rounded-lg hover:bg-dark-elevated transition-colors"
+              >
+                Show more
+              </button>
+            )}
           </div>
         )}
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }

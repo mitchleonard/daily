@@ -1,5 +1,6 @@
 import type { Habit } from '../../db/types';
 import type { HabitStats, TrendStatus } from '../../lib/analytics';
+import { InfoIcon } from './InfoIcon';
 
 interface HabitStatsCardProps {
   habit: Habit;
@@ -80,7 +81,9 @@ export function HabitStatsCard({ habit, stats, onClick }: HabitStatsCardProps) {
           <div className="text-lg font-bold text-accent-primary">
             {stats.currentStreak}
           </div>
-          <div className="text-[10px] text-gray-500 leading-tight">Streak</div>
+          <div className="text-[10px] text-gray-500 leading-tight flex items-center justify-center gap-0.5">
+            Streak <InfoIcon tooltip="Consecutive scheduled days completed based on your habit's schedule (not raw calendar days)" />
+          </div>
         </div>
         
         {/* Longest Streak */}
@@ -88,7 +91,9 @@ export function HabitStatsCard({ habit, stats, onClick }: HabitStatsCardProps) {
           <div className="text-lg font-bold text-gray-300">
             {stats.longestStreak}
           </div>
-          <div className="text-[10px] text-gray-500 leading-tight">Best</div>
+          <div className="text-[10px] text-gray-500 leading-tight flex items-center justify-center gap-0.5">
+            Best <InfoIcon tooltip="Longest streak of consecutive scheduled days in the last 365 days" />
+          </div>
         </div>
         
         {/* 7-day rate */}
@@ -96,7 +101,9 @@ export function HabitStatsCard({ habit, stats, onClick }: HabitStatsCardProps) {
           <div className="text-lg font-bold text-gray-300">
             {stats.scheduledDays7 > 0 ? formatPercent(stats.rate7) : '—'}
           </div>
-          <div className="text-[10px] text-gray-500 leading-tight">7d</div>
+          <div className="text-[10px] text-gray-500 leading-tight flex items-center justify-center gap-0.5">
+            7d <InfoIcon tooltip="Completion rate = completed ÷ scheduled days in the last 7 days" />
+          </div>
         </div>
         
         {/* 30-day rate */}
@@ -104,7 +111,9 @@ export function HabitStatsCard({ habit, stats, onClick }: HabitStatsCardProps) {
           <div className="text-lg font-bold text-gray-300">
             {stats.scheduledDays30 > 0 ? formatPercent(stats.rate30) : '—'}
           </div>
-          <div className="text-[10px] text-gray-500 leading-tight">30d</div>
+          <div className="text-[10px] text-gray-500 leading-tight flex items-center justify-center gap-0.5">
+            30d <InfoIcon tooltip="Completion rate = completed ÷ scheduled days in the last 30 days" />
+          </div>
         </div>
       </div>
 
