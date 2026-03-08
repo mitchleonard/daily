@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>OG Image Variations</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Outfit:wght@400;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, sans-serif;
+      background: #1a1a1a;
+      color: #e5e5e5;
+      padding: 2rem;
+      min-height: 100vh;
+    }
+    h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      color: #a0a0a0;
+    }
+    .variations {
+      display: flex;
+      flex-direction: column;
+      gap: 3rem;
+    }
+    .variation {
+      background: #262626;
+      border-radius: 12px;
+      padding: 1.5rem;
+      border: 1px solid #333;
+    }
+    .variation h2 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: #888;
+    }
+    .preview {
+      width: 100%;
+      max-width: 1200px;
+      aspect-ratio: 1200/630;
+      background: #0b0b0b;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+    .preview canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #2563eb;
+    }
+  </style>
+</head>
+<body>
+  <h1>OG Image Variations — Build the habits that shape your day</h1>
+  <p style="margin-bottom: 1.5rem; color: #888; font-size: 0.9rem;">1200×630 • Use the Download button to save as PNG for og:image</p>
+
+  <div class="variations">
+    <div class="variation" data-id="1">
+      <h2>Variation 1 — Minimal Dark</h2>
+      <div class="preview"><canvas width="1200" height="630"></canvas></div>
+      <button onclick="download(1)">Download Variation 1</button>
+    </div>
+    <div class="variation" data-id="2">
+      <h2>Variation 2 — Soft Accent</h2>
+      <div class="preview"><canvas width="1200" height="630"></canvas></div>
+      <button onclick="download(2)">Download Variation 2</button>
+    </div>
+    <div class="variation" data-id="3">
+      <h2>Variation 3 — Editorial Bold</h2>
+      <div class="preview"><canvas width="1200" height="630"></canvas></div>
+      <button onclick="download(3)">Download Variation 3</button>
+    </div>
+  </div>
+
+  <script>
+    const W = 1200, H = 630;
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = 'Daily_Mockup_3PhoneSpread_Transparent_Edited.png';
+
+    const TEXT = 'Build the habits that shape your day';
+
+    img.onload = () => {
+      drawVariation1();
+      drawVariation2();
+      drawVariation3();
+    };
+
+    function drawVariation1() {
+      const c = document.querySelector('[data-id="1"] canvas');
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#0b0b0b';
+      ctx.fillRect(0, 0, W, H);
+
+      // Phones - centered, scaled to fit
+      const imgW = img.width, imgH = img.height;
+      const scale = Math.min((W * 0.7) / imgW, (H * 0.6) / imgH);
+      const x = (W - imgW * scale) / 2;
+      const y = H - imgH * scale - 40;
+      ctx.drawImage(img, x, y, imgW * scale, imgH * scale);
+
+      // Text - minimal white, Outfit
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '700 56px "Outfit", system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const lines = wrapText(ctx, TEXT, W - 120);
+      const lineHeight = 68;
+      const startY = 80 + (lines.length - 1) * lineHeight / 2;
+      lines.forEach((line, i) => {
+        ctx.fillText(line, W / 2, startY + i * lineHeight);
+      });
+    }
+
+    function drawVariation2() {
+      const c = document.querySelector('[data-id="2"] canvas');
+      const ctx = c.getContext('2d');
+      const g = ctx.createLinearGradient(0, 0, 0, H);
+      g.addColorStop(0, '#1a1625');
+      g.addColorStop(0.5, '#0f0f0f');
+      g.addColorStop(1, '#0b0b0b');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+
+      const imgW = img.width, imgH = img.height;
+      const scale = Math.min((W * 0.65) / imgW, (H * 0.55) / imgH);
+      const x = (W - imgW * scale) / 2;
+      const y = H - imgH * scale - 50;
+      ctx.drawImage(img, x, y, imgW * scale, imgH * scale);
+
+      // Soft off-white, accent on "habits"
+      ctx.font = '600 52px "Outfit", system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      const parts = ['Build the ', 'habits', ' that shape your day'];
+      const totalW = parts.reduce((s, p) => s + ctx.measureText(p).width, 0);
+      let tx = (W - totalW) / 2;
+      const ty = 90;
+      ctx.fillStyle = '#e5e5e5';
+      ctx.fillText(parts[0], tx, ty);
+      tx += ctx.measureText(parts[0]).width;
+      ctx.fillStyle = '#a78bfa';
+      ctx.fillText(parts[1], tx, ty);
+      tx += ctx.measureText(parts[1]).width;
+      ctx.fillStyle = '#e5e5e5';
+      ctx.fillText(parts[2], tx, ty);
+    }
+
+    function drawVariation3() {
+      const c = document.querySelector('[data-id="3"] canvas');
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#0b0b0b';
+      ctx.fillRect(0, 0, W, H);
+
+      const imgW = img.width, imgH = img.height;
+      const scale = Math.min((W * 0.68) / imgW, (H * 0.58) / imgH);
+      const x = (W - imgW * scale) / 2;
+      const y = H - imgH * scale - 30;
+      ctx.drawImage(img, x, y, imgW * scale, imgH * scale);
+
+      // Editorial - Playfair Display, amber accent
+      ctx.font = '700 58px "Playfair Display", Georgia, serif';
+      ctx.textAlign = 'left';
+      const parts2 = ['Build the ', 'habits', ' that shape your day'];
+      const totalW2 = parts2.reduce((s, p) => s + ctx.measureText(p).width, 0);
+      let tx2 = (W - totalW2) / 2;
+      const ty2 = 95;
+      ctx.fillStyle = '#f5f5f5';
+      ctx.fillText(parts2[0], tx2, ty2);
+      tx2 += ctx.measureText(parts2[0]).width;
+      ctx.fillStyle = '#f59e0b';
+      ctx.fillText(parts2[1], tx2, ty2);
+      tx2 += ctx.measureText(parts2[1]).width;
+      ctx.fillStyle = '#f5f5f5';
+      ctx.fillText(parts2[2], tx2, ty2);
+    }
+
+    function wrapText(ctx, text, maxWidth) {
+      const words = text.split(' ');
+      const lines = [];
+      let line = '';
+      for (const w of words) {
+        const test = line ? line + ' ' + w : w;
+        if (ctx.measureText(test).width > maxWidth && line) {
+          lines.push(line);
+          line = w;
+        } else line = test;
+      }
+      if (line) lines.push(line);
+      return lines;
+    }
+
+    function download(id) {
+      const c = document.querySelector(`[data-id="${id}"] canvas`);
+      const a = document.createElement('a');
+      a.href = c.toDataURL('image/png');
+      a.download = `og-variation-${id}.png`;
+      a.click();
+    }
+  </script>
+</body>
+</html>
