@@ -18,7 +18,7 @@ export const HABIT_COLORS = [
   { id: 'amber', hex: '#f59e0b', name: 'Amber' },
   { id: 'red', hex: '#ef4444', name: 'Red' },
   { id: 'white', hex: '#ffffff', name: 'White' },
-  { id: 'black', hex: '#171717', name: 'Black' },
+  { id: 'gray', hex: '#9ca3af', name: 'Gray' },
 ] as const;
 
 /**
