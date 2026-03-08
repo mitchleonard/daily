@@ -11,10 +11,12 @@ const navItems = [
   { path: '/settings', label: 'Settings', icon: '⚙️' },
 ];
 
+type LayoutProps = { basePath?: string };
+
 /**
  * Main app layout with bottom navigation for mobile
  */
-export function Layout() {
+export function Layout({ basePath = '' }: LayoutProps) {
   return (
     <div className="min-h-screen bg-dark-bg flex flex-col">
       {/* Main content area */}
@@ -28,7 +30,7 @@ export function Layout() {
           {navItems.map((item) => (
             <NavLink
               key={item.path}
-              to={item.path}
+              to={basePath + item.path}
               onClick={() => triggerSelection()}
               className={({ isActive }) =>
                 `bottom-nav-item flex-1 ${isActive ? 'active' : ''}`

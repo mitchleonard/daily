@@ -3,3 +3,4 @@ export { HabitsPage } from './HabitsPage';
 export { AnalyticsPage } from './AnalyticsPage';
 export { SettingsPage } from './SettingsPage';
 export { AuthPage } from './AuthPage';
+export { SplashPage } from './SplashPage';

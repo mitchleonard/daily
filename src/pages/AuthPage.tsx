@@ -1,12 +1,18 @@
 import { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth, CognitoError } from '../lib/auth';
 
 type AuthMode = 'signin' | 'signup' | 'confirm' | 'forgot' | 'reset';
 
+function getInitialMode(pathname: string): AuthMode {
+  return pathname === '/signup' ? 'signup' : 'signin';
+}
+
 export function AuthPage() {
+  const location = useLocation();
   const { signIn, signUp, confirmSignUp, forgotPassword, confirmForgotPassword, resendConfirmationCode } = useAuth();
   
-  const [mode, setMode] = useState<AuthMode>('signin');
+  const [mode, setMode] = useState<AuthMode>(() => getInitialMode(location.pathname));
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');

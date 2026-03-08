@@ -35,9 +35,14 @@ export const WEEKDAYS = [
 ] as const;
 
 /**
- * Default start date per spec
+ * Default start date when creating a habit
  */
 export const DEFAULT_START_DATE = '2025-12-17';
+
+/**
+ * Earliest date users can select (for backdating habits)
+ */
+export const MIN_START_DATE = '2020-01-01';
 
 /**
  * Common emoji suggestions for habits

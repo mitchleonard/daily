@@ -3,7 +3,7 @@ import type { Habit, NewHabit, Schedule } from '../../db/types';
 import { ColorPicker } from './ColorPicker';
 import { WeekdayPicker } from './WeekdayPicker';
 import { EmojiPicker } from './EmojiPicker';
-import { HABIT_COLORS, DEFAULT_START_DATE } from './constants';
+import { HABIT_COLORS, DEFAULT_START_DATE, MIN_START_DATE } from './constants';
 
 interface HabitFormModalProps {
   habit?: Habit; // If provided, we're editing; otherwise creating
@@ -163,7 +163,7 @@ export function HabitFormModal({ habit, onSave, onClose }: HabitFormModalProps) 
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              min={DEFAULT_START_DATE}
+              min={MIN_START_DATE}
               max={today}
               className="w-full px-4 py-3 bg-dark-elevated border border-dark-border rounded-lg
                          text-white focus:border-accent-primary focus:outline-none
