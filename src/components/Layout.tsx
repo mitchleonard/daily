@@ -18,13 +18,16 @@ type LayoutProps = { basePath?: string };
  */
 export function Layout({ basePath = '' }: LayoutProps) {
   return (
-    <div className="min-h-screen bg-dark-bg flex flex-col">
-      {/* Main content area */}
-      <main className="flex-1 pb-16">
+    <div
+      className="fixed inset-0 bg-dark-bg flex flex-col"
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+    >
+      {/* Main content area - flex-1 fills space between status bar and nav */}
+      <main className="flex-1 min-h-0 overflow-hidden">
         <Outlet />
       </main>
 
-      {/* Bottom navigation */}
+      {/* Bottom navigation - in document flow so height is naturally accounted for */}
       <nav className="bottom-nav">
         <div className="flex justify-around items-center max-w-lg mx-auto">
           {navItems.map((item) => (

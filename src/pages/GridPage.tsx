@@ -63,7 +63,7 @@ export function GridPage() {
   }
 
   return (
-    <div className="page-container-grid">
+    <div className="h-full">
       <VirtualizedGrid
         habits={habits}
         dates={dates}
