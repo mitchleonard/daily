@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
+import { recoverLegacyDailyProfile } from '../legacyRecovery';
 import { isSupabaseConfigured, supabase } from '../supabase';
 
 interface User {
@@ -38,14 +39,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const syncUser = async () => {
       const { data, error } = await client.auth.getUser();
-      setUser(error || !data.user ? null : toUser(data.user));
+      if (error || !data.user) {
+        setUser(null);
+      } else {
+        await recoverLegacyDailyProfile();
+        setUser(toUser(data.user));
+      }
       setLoading(false);
     };
 
     void syncUser();
     const { data: subscription } = client.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ? toUser(session.user) : null);
-      setLoading(false);
+      void (async () => {
+        if (session?.user) {
+          await recoverLegacyDailyProfile();
+          setUser(toUser(session.user));
+        } else {
+          setUser(null);
+        }
+        setLoading(false);
+      })();
     });
 
     return () => subscription.subscription.unsubscribe();
