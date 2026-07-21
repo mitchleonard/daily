@@ -1,0 +1,1 @@
+alter table public.habit_logs drop constraint habit_logs_legacy_cognito_user_id_habit_id_fkey;

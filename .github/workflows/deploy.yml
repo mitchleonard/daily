@@ -25,10 +25,8 @@ jobs:
       - run: npm ci
       - run: npm run build
         env:
-          VITE_USER_POOL_ID: ${{ secrets.VITE_USER_POOL_ID }}
-          VITE_USER_POOL_CLIENT_ID: ${{ secrets.VITE_USER_POOL_CLIENT_ID }}
-          VITE_API_ENDPOINT: ${{ secrets.VITE_API_ENDPOINT }}
-          VITE_AWS_REGION: ${{ secrets.VITE_AWS_REGION }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist

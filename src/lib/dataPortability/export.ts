@@ -3,7 +3,7 @@
  * Exports all habits and logs to a downloadable JSON file
  */
 
-import { db } from '../../db/database';
+import { cloudHabitsRepository, cloudLogsRepository } from '../../db';
 import type { ExportData } from './types';
 import { CURRENT_SCHEMA_VERSION } from './types';
 
@@ -11,11 +11,9 @@ import { CURRENT_SCHEMA_VERSION } from './types';
  * Gather all data for export
  */
 export async function gatherExportData(): Promise<ExportData> {
-  // Fetch all habits (including archived)
-  const habits = await db.habits.orderBy('sortOrder').toArray();
-  
-  // Fetch all logs
-  const logs = await db.logs.toArray();
+  // The cloud repositories fall back to IndexedDB when the app is offline.
+  const habits = await cloudHabitsRepository.getAll(true);
+  const logs = await cloudLogsRepository.getByDateRange('0001-01-01', '9999-12-31');
 
   return {
     schemaVersion: CURRENT_SCHEMA_VERSION,
