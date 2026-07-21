@@ -22,7 +22,7 @@ A beautiful, mobile-first habit tracker with a scrollable grid interface. Design
 - **Dexie.js** - IndexedDB wrapper for local data persistence
 - **web-haptics** - Haptic feedback on supported devices
 - **Recharts** - Analytics charts
-- **Supabase** - Passwordless email authentication and Postgres sync with Row Level Security
+- **Supabase** - Email/password authentication and Postgres sync with Row Level Security
 
 ## Getting Started
 
@@ -150,7 +150,7 @@ daily/
 │   │   ├── cloudRepository.ts  # Supabase-backed repository with IndexedDB fallback
 │   │   └── seedData.ts    # Sample data generator (dev)
 │   ├── lib/
-│   │   ├── auth/          # Supabase passwordless auth provider
+│   │   ├── auth/          # Supabase password auth provider
 │   │   ├── haptics.ts     # Haptic feedback (success, selection, buzz)
 │   │   ├── analytics/     # Stats, streaks, connections
 │   │   ├── api.ts         # REST client for habits/logs API
@@ -164,7 +164,7 @@ daily/
 │   │   └── tailwind.css   # Tailwind + dark theme
 │   ├── App.tsx            # Router + auth wiring
 │   └── main.tsx           # App entry point
-├── supabase/              # Database migrations and recovery Edge Function
+├── supabase/              # Database migrations and legacy-password migration Edge Function
 ├── infra/                 # Retired AWS CDK source retained for migration history
 ├── docs/
 │   └── spec.md            # Full feature specification
@@ -220,16 +220,18 @@ Habit reordering uses `@dnd-kit` for reliable touch and mouse support:
 
 ### Authentication and legacy recovery
 
-Daily uses passwordless email links through Supabase. For the production app,
-set the Supabase Auth Site URL and redirect allow-list to
-`https://daily.mitchleonard.com`.
+Daily uses Supabase email/password authentication. For the production app, set
+the Supabase Auth Site URL and redirect allow-list to
+`https://daily.mitchleonard.com`; email confirmation applies only to newly
+created accounts.
 
-On the first sign-in after the AWS migration, Daily checks the browser for its
-previous Cognito ID token. A protected Edge Function verifies the token's AWS
-signature and only then attaches the matching imported profile to the new
-Supabase user. The function cannot be called by anonymous or normal browser
-database roles. See [`docs/supabase-operations.md`](docs/supabase-operations.md)
-for operations and recovery details.
+On the first password sign-in after the AWS migration, Daily verifies the
+existing password with Cognito, then creates the Supabase identity and attaches
+the matching imported profile. Cognito password hashes are never exported. The
+browser-token recovery flow remains protected by a Supabase JWT and verifies
+the old token's AWS signature. See
+[`docs/supabase-operations.md`](docs/supabase-operations.md) for operations and
+recovery details.
 
 ## Using the Grid
 

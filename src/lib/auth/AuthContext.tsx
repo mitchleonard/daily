@@ -11,8 +11,8 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   isConfigured: boolean;
-  signIn: (email: string) => Promise<void>;
-  signUp: (email: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -64,22 +64,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.subscription.unsubscribe();
   }, []);
 
-  const sendMagicLink = useCallback(async (email: string, shouldCreateUser: boolean) => {
+  const signIn = useCallback(async (email: string, password: string) => {
     if (!supabase) throw new Error('Daily is not configured yet.');
 
-    const { error } = await supabase.auth.signInWithOtp({
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (!error) return;
+
+    // Legacy Cognito passwords cannot be exported. On a first password sign-in,
+    // the protected migration function verifies the legacy credentials directly
+    // with Cognito, creates the equivalent Supabase identity, and claims the
+    // matching imported Daily profile. It intentionally returns no session.
+    const { error: migrationError } = await supabase.functions.invoke('migrate-legacy-cognito-password', {
+      body: { email, password },
+    });
+    if (migrationError) throw new Error('Email or password was incorrect.');
+
+    const { error: retryError } = await supabase.auth.signInWithPassword({ email, password });
+    if (retryError) throw new Error('Email or password was incorrect.');
+  }, []);
+
+  const signUp = useCallback(async (email: string, password: string) => {
+    if (!supabase) throw new Error('Daily is not configured yet.');
+
+    const { error } = await supabase.auth.signUp({
       email,
-      options: { emailRedirectTo: emailRedirectTo(), shouldCreateUser },
+      password,
+      options: { emailRedirectTo: emailRedirectTo() },
     });
     if (error) throw error;
   }, []);
-
-  // Passwordless email authentication uses one verified flow for both returning
-  // and first-time Supabase users. This is essential for the AWS-to-Supabase
-  // migration: a legacy Daily account has data to recover, but no pre-existing
-  // Supabase Auth identity.
-  const signIn = useCallback((email: string) => sendMagicLink(email, true), [sendMagicLink]);
-  const signUp = useCallback((email: string) => sendMagicLink(email, true), [sendMagicLink]);
 
   const signOut = useCallback(async () => {
     if (!supabase) return;
