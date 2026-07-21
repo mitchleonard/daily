@@ -74,7 +74,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error;
   }, []);
 
-  const signIn = useCallback((email: string) => sendMagicLink(email, false), [sendMagicLink]);
+  // Passwordless email authentication uses one verified flow for both returning
+  // and first-time Supabase users. This is essential for the AWS-to-Supabase
+  // migration: a legacy Daily account has data to recover, but no pre-existing
+  // Supabase Auth identity.
+  const signIn = useCallback((email: string) => sendMagicLink(email, true), [sendMagicLink]);
   const signUp = useCallback((email: string) => sendMagicLink(email, true), [sendMagicLink]);
 
   const signOut = useCallback(async () => {
