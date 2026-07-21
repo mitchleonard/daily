@@ -8,9 +8,9 @@ const INSTALL_PROMPT = `I want to set up Daily, a habit tracker from github.com/
 
 Please help me:
 1. Clone the repo to my computer
-2. Install dependencies and run it locally (it works in local-only mode without AWS)
-3. Optionally: Set up AWS Cognito for auth so I can deploy and use it across devices
-4. Optionally: Deploy to Vercel or another host
+2. Install dependencies and run it locally (it works in local-only mode without cloud configuration)
+3. Configure Supabase email-link authentication and the two VITE_SUPABASE_* variables for cross-device sync
+4. Deploy to GitHub Pages or another static host
 
 Walk me through each step and wait for my input when needed.`;
 

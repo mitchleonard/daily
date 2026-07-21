@@ -22,6 +22,7 @@ A beautiful, mobile-first habit tracker with a scrollable grid interface. Design
 - **Dexie.js** - IndexedDB wrapper for local data persistence
 - **web-haptics** - Haptic feedback on supported devices
 - **Recharts** - Analytics charts
+- **Supabase** - Passwordless email authentication and Postgres sync with Row Level Security
 
 ## Getting Started
 
@@ -62,33 +63,19 @@ npm run preview
 
 ## Deployment to GitHub Pages
 
-### Option 1: GitHub Actions (Recommended)
+### GitHub Actions (Recommended)
 
-Create `.github/workflows/deploy.yml`:
+The committed workflow deploys every push to `main` using GitHub Pages. Set
+these repository secrets before the first deployment:
 
-```yaml
-name: Deploy to GitHub Pages
-
-on:
-  push:
-    branches: [main]
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-      - run: npm ci
-      - run: npm run build
-      - uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
+```text
+VITE_SUPABASE_URL
+VITE_SUPABASE_PUBLISHABLE_KEY
 ```
+
+The publishable key is intended for browser use. Never add a Supabase secret or
+service-role key to GitHub Actions build secrets, `.env`, or any `VITE_*`
+variable.
 
 ### Option 2: Manual Deploy
 
@@ -160,10 +147,10 @@ daily/
 │   │   ├── database.ts    # Dexie (IndexedDB) setup
 │   │   ├── habitsRepository.ts
 │   │   ├── logsRepository.ts
-│   │   ├── cloudRepository.ts  # AWS API when configured
+│   │   ├── cloudRepository.ts  # Supabase-backed repository with IndexedDB fallback
 │   │   └── seedData.ts    # Sample data generator (dev)
 │   ├── lib/
-│   │   ├── auth.ts        # Cognito auth provider
+│   │   ├── auth/          # Supabase passwordless auth provider
 │   │   ├── haptics.ts     # Haptic feedback (success, selection, buzz)
 │   │   ├── analytics/     # Stats, streaks, connections
 │   │   ├── api.ts         # REST client for habits/logs API
@@ -177,7 +164,8 @@ daily/
 │   │   └── tailwind.css   # Tailwind + dark theme
 │   ├── App.tsx            # Router + auth wiring
 │   └── main.tsx           # App entry point
-├── infra/                 # AWS CDK (Cognito, DynamoDB, Lambda, API Gateway)
+├── supabase/              # Database migrations and recovery Edge Function
+├── infra/                 # Retired AWS CDK source retained for migration history
 ├── docs/
 │   └── spec.md            # Full feature specification
 ├── tailwind.config.js
@@ -226,9 +214,22 @@ Habit reordering uses `@dnd-kit` for reliable touch and mouse support:
 ### Data Storage
 
 - **Local mode**: Data is stored in your browser's **IndexedDB** (Dexie). Persists across refreshes; no account required.
-- **Cloud mode** (when AWS is configured): Habits and logs sync to DynamoDB via API. Sign in to use your data across devices.
+- **Cloud mode** (when Supabase is configured): Habits and logs sync to Postgres. Row Level Security limits every account to its own data.
 - Use Settings → Developer Tools (dev mode only) to seed sample data or clear local data.
 - DevTools → Application → IndexedDB → DailyDB to inspect local data.
+
+### Authentication and legacy recovery
+
+Daily uses passwordless email links through Supabase. For the production app,
+set the Supabase Auth Site URL and redirect allow-list to
+`https://daily.mitchleonard.com`.
+
+On the first sign-in after the AWS migration, Daily checks the browser for its
+previous Cognito ID token. A protected Edge Function verifies the token's AWS
+signature and only then attaches the matching imported profile to the new
+Supabase user. The function cannot be called by anonymous or normal browser
+database roles. See [`docs/supabase-operations.md`](docs/supabase-operations.md)
+for operations and recovery details.
 
 ## Using the Grid
 
@@ -373,4 +374,3 @@ Navigate to `/settings` for data management and preferences.
 ## License
 
 MIT
-

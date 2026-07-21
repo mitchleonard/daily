@@ -73,7 +73,10 @@ export const cloudHabitsRepository = {
   async unarchive(id: string): Promise<boolean> { return Boolean(await this.update(id, { archivedAt: null })); },
   async delete(id: string): Promise<boolean> {
     if (!await useCloud()) return localHabits.delete(id);
-    const { error, count } = await client().from('habits').delete({ count: 'exact' }).eq('id', id);
+    const db = client();
+    const { error: logsError } = await db.from('habit_logs').delete().eq('habit_id', id);
+    if (logsError) throw logsError;
+    const { error, count } = await db.from('habits').delete({ count: 'exact' }).eq('id', id);
     if (error) throw error;
     return (count ?? 0) > 0;
   },
@@ -91,6 +94,11 @@ export const cloudHabitsRepository = {
     const { count, error } = await query;
     if (error) throw error;
     return count ?? 0;
+  },
+  async clear(): Promise<void> {
+    if (!await useCloud()) return localHabits.clear();
+    const { error } = await client().from('habits').delete().not('id', 'is', null);
+    if (error) throw error;
   },
 };
 
@@ -133,5 +141,10 @@ export const cloudLogsRepository = {
     const { count, error } = await client().from('habit_logs').select('*', { count: 'exact', head: true });
     if (error) throw error;
     return count ?? 0;
+  },
+  async clear(): Promise<void> {
+    if (!await useCloud()) return localLogs.clear();
+    const { error } = await client().from('habit_logs').delete().not('id', 'is', null);
+    if (error) throw error;
   },
 };

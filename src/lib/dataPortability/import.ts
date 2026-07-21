@@ -5,12 +5,12 @@
  */
 
 import { db, now } from '../../db/database';
+import { cloudHabitsRepository, cloudLogsRepository } from '../../db/cloudRepository';
 import { logsRepository } from '../../db/logsRepository';
 import type { Habit, LogEntry } from '../../db/types';
 import type { ExportData, ImportValidation, ImportResult } from './types';
 import { SUPPORTED_SCHEMA_VERSIONS } from './types';
-import { isAwsConfigured, getIdToken } from '../auth';
-import * as api from '../api';
+import { supabase } from '../supabase';
 
 /**
  * Read file content as text
@@ -215,20 +215,20 @@ function deduplicateLogs(logs: LogEntry[]): { logs: LogEntry[]; duplicatesRemove
 }
 
 async function useCloud(): Promise<boolean> {
-  if (!isAwsConfigured()) return false;
-  const token = await getIdToken();
-  return !!token;
+  if (!supabase) return false;
+  const { data, error } = await supabase.auth.getUser();
+  return !error && Boolean(data.user);
 }
 
 /**
- * Import data to cloud API (merge mode - case-insensitive name match to avoid duplicates)
+ * Import data to Supabase (merge mode - case-insensitive name match to avoid duplicates)
  */
 async function importToCloud(data: ExportData): Promise<ImportResult> {
   const { logs: dedupedLogs, duplicatesRemoved } = deduplicateLogs(data.logs);
 
   // Map: import habit ID -> actual habit ID (existing or newly created)
   const habitIdMap = new Map<string, string>();
-  const existingHabits = await api.getHabits(true);
+  const existingHabits = await cloudHabitsRepository.getAll(true);
   // Case-insensitive lookup: first existing habit per lowercase name (keeps user's capitalization)
   const existingByLowerName = new Map<string, { id: string; name: string }>();
   for (const h of existingHabits) {
@@ -243,7 +243,7 @@ async function importToCloud(data: ExportData): Promise<ImportResult> {
     const existing = existingByLowerName.get(habit.name.toLowerCase());
     if (existing) {
       // Match - keep user's name, update icon/color/schedule etc.
-      await api.updateHabit(existing.id, {
+      await cloudHabitsRepository.update(existing.id, {
         name: existing.name, // keep what user entered
         icon: habit.icon,
         color: habit.color,
@@ -255,17 +255,13 @@ async function importToCloud(data: ExportData): Promise<ImportResult> {
       habitIdMap.set(habit.id, existing.id);
     } else {
       // New habit - create with import data
-      const created = await api.createHabit({
-        id: habit.id,
+      const created = await cloudHabitsRepository.create({
         name: habit.name,
         icon: habit.icon,
         color: habit.color,
         scheduleDays: habit.scheduleDays,
         startDate: habit.startDate,
-        createdAt: habit.createdAt,
-        updatedAt: habit.updatedAt,
         archivedAt: habit.archivedAt,
-        sortOrder: habit.sortOrder,
       });
       habitIdMap.set(habit.id, created.id);
     }
@@ -275,7 +271,7 @@ async function importToCloud(data: ExportData): Promise<ImportResult> {
   for (const log of dedupedLogs) {
     const actualHabitId = habitIdMap.get(log.habitId);
     if (actualHabitId) {
-      await api.upsertLog(actualHabitId, log.date, log.status);
+      await cloudLogsRepository.upsert({ habitId: actualHabitId, date: log.date, status: log.status });
     }
   }
 
@@ -367,6 +363,12 @@ export async function importData(data: ExportData): Promise<ImportResult> {
  */
 export async function resetAllData(): Promise<boolean> {
   try {
+    if (await useCloud()) {
+      await cloudLogsRepository.clear();
+      await cloudHabitsRepository.clear();
+      return true;
+    }
+
     await db.transaction('rw', [db.habits, db.logs], async () => {
       await db.habits.clear();
       await db.logs.clear();

@@ -9,7 +9,7 @@ import { AuthProvider, useAuth } from './lib/auth';
 function ProtectedApp() {
   const { user, loading, isConfigured } = useAuth();
 
-  // If AWS is not configured, show splash/auth at root for local preview
+  // If Supabase is not configured, show splash/auth at root for local preview
   // App (grid, habits, etc.) lives at /app
   if (!isConfigured) {
     return (

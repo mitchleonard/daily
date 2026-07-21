@@ -423,7 +423,7 @@ export function SettingsPage() {
         </div>
       )}
 
-      {/* Account Section - Only shown when AWS is configured */}
+      {/* Account Section - Only shown when Supabase is configured */}
       {isConfigured && user && (
         <div className="card">
           <h2 className="text-sm font-medium text-gray-300 mb-3">👤 Account</h2>
