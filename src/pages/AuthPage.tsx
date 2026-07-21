@@ -24,7 +24,12 @@ export function AuthPage() {
       else await signUp(email);
       setMessage('Check your email for a secure sign-in link.');
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Unable to send a sign-in link.');
+      const errorMessage = caught instanceof Error ? caught.message : 'Unable to send a sign-in link.';
+      setError(
+        mode === 'signin' && /signups not allowed for otp/i.test(errorMessage)
+          ? 'No Daily account exists for this email yet. Choose “Create one” below to receive your first sign-in link.'
+          : errorMessage,
+      );
     } finally {
       setLoading(false);
     }
